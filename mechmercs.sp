@@ -65,6 +65,7 @@ enum {
 	ArmoredCarGunDmg,
 	MaxSMGAmmo,
 	VehicleConstructHP,
+	BuildSetUpTime,
 	SupportHP,
 	OffensiveHP,
 	HeavySupportHP,
@@ -241,6 +242,8 @@ public void OnPluginStart()
 	MMCvars[MaxSMGAmmo] = CreateConVar("mechmercs_sidearm_ammo", "1000", "how much ammo each vehicle's sidearm (SMG or other) gets.", FCVAR_NONE, true, 0.0, true, 99999.0);
 	
 	MMCvars[VehicleConstructHP] = CreateConVar("mechmercs_constructhp", "500", "how much max health vehicle constructs get", FCVAR_NONE, true, 1.0, true, 99999.0);
+	
+	MMCvars[BuildSetUpTime] = CreateConVar("mechmercs_allowbuild_setup", "0", "allows engineers to build mainframes or constructs during setup time", FCVAR_NONE, true, 0.0, true, 1.0);
 	
 	MMCvars[SupportHP] = CreateConVar("mechmercs_supporthp", "1000", "how much max health the Support mainframes get", FCVAR_NONE, true, 1.0, true, 99999.0);
 	
@@ -581,7 +584,7 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You Need to be an Engineer to build Vehicles or Vehicle Mainframes.");
 		return Plugin_Handled;
 	}
-	else if ( GameRules_GetRoundState() == RoundState_Preround or GameRules_GetProp("m_bInSetup") )
+	else if ( !MMCvars[BuildSetUpTime].BoolValue and (GameRules_GetRoundState() == RoundState_Preround or GameRules_GetProp("m_bInSetup")) )
 	{
 		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build Vehicles or Vehicle Mainframes yet...");
 		return Plugin_Handled;
@@ -597,12 +600,12 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 		}
 		case Powerup: {
 			Menu tankers = new Menu( MenuHandler_MakeTankPowUp );
-			tankers.AddItem("2", "Ambulance: Heals everybody in Area of Effect radius, 400 HP. Costs 600 Metal");
-			tankers.AddItem("1", "Armored Car: Armed w/ Machinegun and 20mm Cannon, 600 HP. Costs 2,000 Metal");
-			tankers.AddItem("3", "Panzer II: Armed w/ Flamethrower and HE, Arcing Rockets, 750 HP. Costs 3,000 Metal");
-			tankers.AddItem("0", "Panzer IV: Armed w/ Machinegun and Mouse2 Rockets, 1000 HP. Costs 4,000 Metal");
-			tankers.AddItem("4", "King Tiger II: Armed w/ Machinegun and Mouse2 Rockets, 2000 HP. Costs 5,000 Metal");
-			tankers.AddItem("5", "Marder II: Armed w/ 700 DMG Anti-Tank Rockets, 500 HP. Costs 3,000 Metal");
+			tankers.AddItem("2", "Ambulance: Heals everybody in Area of Effect radius, Costs 800 Metal");
+			tankers.AddItem("1", "Armored Car: Armed w/ Machinegun and 20mm Cannon, Costs 2,000 Metal");
+			tankers.AddItem("3", "Panzer II: Armed w/ Flamethrower and HE, Arcing Rockets, Costs 3,000 Metal");
+			tankers.AddItem("0", "Panzer IV: Armed w/ Machinegun and Mouse2 Rockets, Costs 4,000 Metal");
+			tankers.AddItem("4", "King Tiger II: Armed w/ Machinegun and Mouse2 Rockets, Costs 5,000 Metal");
+			tankers.AddItem("5", "Marder II: Armed w/ 700 DMG Anti-Tank Rockets, 3,000 Metal");
 			tankers.Display(client, MENU_TIME_FOREVER);
 		}
 		case GunGame: {
@@ -1036,7 +1039,7 @@ public void OnPreThink(int client)
 			switch ( TankConstruct[team-2][index][1] ) {
 				case Tank:			metalcost = 4000;
 				case ArmoredCar:		metalcost = 2000;
-				case Ambulance:			metalcost = 600;
+				case Ambulance:			metalcost = 800;
 				case KingPanzer:		metalcost = 5000;
 				case PanzerIII, Destroyer:	metalcost = 3000;
 			}
