@@ -71,6 +71,13 @@ public void ManageDownloads()
 	for (i = 0; i < sizeof(extensions); i++) {
 		Format(s, PLATFORM_MAX_PATH, "%s%s", OfficerModelPrefix, extensions[i]);
 		CheckDownload(s);
+		
+		Format(s, PLATFORM_MAX_PATH, "models/structures/combine/barracks%s", extensions[i]);
+		CheckDownload(s);
+		Format(s, PLATFORM_MAX_PATH, "models/structures/combine/armory%s", extensions[i]);
+		CheckDownload(s);
+		Format(s, PLATFORM_MAX_PATH, "models/structures/combine/synthfac%s", extensions[i]);
+		CheckDownload(s);
 	}
 	for (i = 0; i < sizeof(extensionsb); i++) {
 		Format(s, PLATFORM_MAX_PATH, "materials/models/custom/army_spy/cigar_blue%s", extensionsb[i]);

@@ -95,9 +95,11 @@ methodmap GameModeManager {
 		}
 		*/
 	}
-	public int GetGarageRefFlags(const int index)
+	public int GetGarageRefFlags(const int num)
 	{
-		int flag;
+		int flag, index;
+		if (num < 0)
+			index=0;
 		if (GarageRefs[index][0] and IsValidEntity(this.GetGarage(index, 0)))
 			flag |= SUPPORTBUILT;
 		if (GarageRefs[index][1] and IsValidEntity(this.GetGarage(index, 1)))
