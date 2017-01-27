@@ -12,7 +12,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.0.0"
+#define PLUGIN_VERSION		"1.0.2"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) and (%1) <= MaxClients and IsClientInGame((%1)) )
@@ -1304,6 +1304,9 @@ public Action Timer_GarageThink(Handle timer)
 			continue;
 
 		team = GetClientTeam(i)-2;
+		if (team < 0)
+			team=0;
+		
 		switch (team) {
 			case 0: { buildinghp[0] = health[team][0]; buildinghp[1] = health[team][1]; buildinghp[2] = health[team][2]; }
 			case 1: { buildinghp[0] = health[team][0]; buildinghp[1] = health[team][1]; buildinghp[2] = health[team][2]; }
