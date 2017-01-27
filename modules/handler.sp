@@ -328,7 +328,7 @@ public Action ManageOnVehicleTakeDamage(const BaseVehicle victim, int &attacker,
 			}
 			if (attacker > MaxClients or attacker <= 0)	// if null attacker, just kill the vehicle outright
 			{
-				TF2_IgnitePlayer(tanker, attacker);
+				//TF2_IgnitePlayer(tanker, attacker);
 				CreateTimer(0.1, Timer_VehicleDeath, victim.userid);
 			}
 			else if ( damage > 100.0 and !strcmp(classname, "tf_weapon_knife", false) ) // Vehicles shouldn't die from a single backstab

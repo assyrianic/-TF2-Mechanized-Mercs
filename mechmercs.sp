@@ -12,7 +12,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.0.2"
+#define PLUGIN_VERSION		"1.0.3"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) and (%1) <= MaxClients and IsClientInGame((%1)) )
@@ -644,7 +644,9 @@ public bool TraceFilterIgnorePlayers(int entity, int contentsMask, any client)
 }
 public int MenuHandler_MakeTankPowUp(Menu menu, MenuAction action, int client, int select)
 {
-	if (BaseFighter(client).Class != TFClass_Engineer or IsClientObserver(client) or !IsPlayerAlive(client))
+	if (!IsValidClient(client))
+		return;
+	else if (BaseFighter(client).Class != TFClass_Engineer or IsClientObserver(client) or !IsPlayerAlive(client))
 		return;
 	
 	else if (manager.IsPowerupFull(GetClientTeam(client))) {
@@ -784,7 +786,9 @@ public Action OnConstructTouch(int item, int other)
 
 public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int select)
 {
-	if (BaseFighter(client).Class != TFClass_Engineer or IsClientObserver(client) or !IsPlayerAlive(client))
+	if (!IsValidClient(client))
+		return;
+	else if (BaseFighter(client).Class != TFClass_Engineer or IsClientObserver(client) or !IsPlayerAlive(client))
 		return;
 
 	else if (GetEntProp(client, Prop_Data, "m_iAmmo", 4, 3) < 200) {
