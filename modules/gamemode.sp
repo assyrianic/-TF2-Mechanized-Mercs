@@ -28,10 +28,19 @@ float
 
 #define	MAX_CONSTRUCT_VEHICLES	5
 
-int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][6];
+int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][8];
 /* 0-red ; 1-blue */
 /*  */
-/* 0 = entity ref ; 1 = vehicle type ; 2 = builder ; 3 = metal sink ; 4 = saved clipsize ; 5 = saved health ;  */
+/*
+0 = entity ref ;
+1 = vehicle type ;
+2 = builder ;
+3 = metal sink ;
+4 = saved clipsize ;
+5 = saved health ;
+6 = saved player health ;
+7 = max metal needed to finish ;
+*/
 
 methodmap GameModeManager {
 	public GameModeManager() {}
@@ -147,30 +156,37 @@ methodmap GameModeManager {
 		
 		char tName[32]; tName[0] = '\0';
 		char szModelPath[PLATFORM_MAX_PATH];
+		int metal;
 		switch (vehtype) {
 			case Tank: {
 				szModelPath = TankModel;
 				Format(tName, sizeof(tName), "mechmercs_construct_panzer4%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[PanzerMetal].IntValue;
 			}
 			case ArmoredCar: {
 				szModelPath = ArmCarModel;
 				Format(tName, sizeof(tName), "mechmercs_construct_armoredcar%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[ArmoredCarMetal].IntValue;
 			}
 			case Ambulance: {
 				szModelPath = AmbModel;
 				Format(tName, sizeof(tName), "mechmercs_construct_ambulance%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[AmbulanceMetal].IntValue;
 			}
 			case PanzerIII: {
 				szModelPath = LightTankModel;
 				Format(tName, sizeof(tName), "mechmercs_construct_lighttank%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[LitePanzerMetal].IntValue;
 			}
 			case KingPanzer: {
 				szModelPath = KingTankModel;
 				Format(tName, sizeof(tName), "mechmercs_construct_tiger%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[KingPanzerMetal].IntValue;
 			}
 			case Destroyer: {
 				szModelPath = DestroyerModel;
 				Format(tName, sizeof(tName), "mechmercs_construct_marder%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[Marder3Metal].IntValue;
 			}
 		}
 		DispatchKeyValue(construct, "targetname", tName);
@@ -220,6 +236,8 @@ methodmap GameModeManager {
 				TankConstruct[team-2][index][3] = 0;
 				TankConstruct[team-2][index][4] = 0;
 				TankConstruct[team-2][index][5] = 0;
+				//TankConstruct[team-2][index][6] = 0;
+				TankConstruct[team-2][index][7] = metal;
 				return index;
 			}
 		}

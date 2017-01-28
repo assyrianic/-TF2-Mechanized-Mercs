@@ -12,7 +12,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.1.2"
+#define PLUGIN_VERSION		"1.1.4"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) and (%1) <= MaxClients and IsClientInGame((%1)) )
@@ -746,7 +746,7 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 		{
 			int iCurrentMetal = GetEntProp(attacker, Prop_Data, "m_iAmmo", 4, 3);
 			int FixAdd = MMCvars[ConstructMetalAdd].IntValue;
-			if ( iCurrentMetal > 0 ) {
+			if ( iCurrentMetal > 0 and TankConstruct[team-2][index][3] < TankConstruct[team-2][index][7] ) {
 				if (iCurrentMetal < FixAdd)
 					FixAdd = iCurrentMetal;
 
@@ -778,20 +778,12 @@ public Action OnConstructTouch(int item, int other)
 		}
 		else team = 3;
 		
-		int metalcost;
-		switch ( TankConstruct[team-2][index][1] ) {
-			case Tank:			metalcost = MMCvars[PanzerMetal].IntValue;
-			case ArmoredCar:		metalcost = MMCvars[ArmoredCarMetal].IntValue;
-			case Ambulance:			metalcost = MMCvars[AmbulanceMetal].IntValue;
-			case KingPanzer:		metalcost = MMCvars[KingPanzerMetal].IntValue;
-			case PanzerIII:			metalcost = MMCvars[LitePanzerMetal].IntValue;
-			case Destroyer:			metalcost = MMCvars[Marder3Metal].IntValue;
-		}
-		if (TankConstruct[team-2][index][3] >= metalcost) {
+		if (TankConstruct[team-2][index][3] >= TankConstruct[team-2][index][7]) {
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
 			ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle! JUMP to Exit Vehicle");
 			if (GetClientButtons(other) & IN_RELOAD) {
 				BaseVehicle toucher = BaseVehicle(other);
+				TankConstruct[team-2][index][6] = GetClientHealth(other);
 				toucher.iType = TankConstruct[team-2][index][1];
 				toucher.bIsVehicle = true;
 				toucher.ConvertToVehicle();
@@ -1075,18 +1067,9 @@ public void OnPreThink(int client)
 			}
 			else team = 2;
 			
-			int metalcost;
-			switch ( TankConstruct[team-2][index][1] ) {
-				case Tank:			metalcost = MMCvars[PanzerMetal].IntValue;
-				case ArmoredCar:		metalcost = MMCvars[ArmoredCarMetal].IntValue;
-				case Ambulance:			metalcost = MMCvars[AmbulanceMetal].IntValue;
-				case KingPanzer:		metalcost = MMCvars[KingPanzerMetal].IntValue;
-				case PanzerIII:			metalcost = MMCvars[LitePanzerMetal].IntValue;
-				case Destroyer:			metalcost = MMCvars[Marder3Metal].IntValue;
-			}
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
-			if (TankConstruct[team-2][index][3] < metalcost)
-				ShowHudText(client, -1, "Metal Progress for Vehicle: %i / %i\nVehicle Health: %i", TankConstruct[team-2][index][3], metalcost, GetEntProp(entity, Prop_Data, "m_iHealth"));
+			if (TankConstruct[team-2][index][3] < TankConstruct[team-2][index][7])
+				ShowHudText(client, -1, "Metal Progress for Vehicle: %i / %i\nVehicle Health: %i", TankConstruct[team-2][index][3], TankConstruct[team-2][index][7], GetEntProp(entity, Prop_Data, "m_iHealth"));
 			else ShowHudText(client, -1, "Vehicle is Ready to Board!");
 		}
 	}
@@ -1110,6 +1093,8 @@ public void OnPreThink(int client)
 					player.bIsVehicle = false;
 					player.Reset();
 					TF2_RegeneratePlayer(client);
+					if (TankConstruct[team-2][index][6] > 0)
+						SetEntityHealth(client, TankConstruct[team-2][index][6]);
 				}
 			}
 			else CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't exit the vehicle in this area.");
