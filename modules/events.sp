@@ -134,7 +134,7 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 			case Powerup: {
 				player.iType = -1;
 				player.bSetOnSpawn = false;
-				CPrintToChat(client, "{red}[Mechanized Mercs] {white}Engies can build Vehicles (!vehicle), press RELOAD, when they're done building, to drive them!");
+				CPrintToChat(client, "{red}[MechMercs] {white}You can build Vehicles (!vehicle), press RELOAD to drive them! Press JUMP to exit. Engies can build vehicles faster (uses metal)");
 			}
 			case GunGame: {
 				if (player.iVehicleKills < 5)

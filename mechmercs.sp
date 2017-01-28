@@ -12,7 +12,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.1.5"
+#define PLUGIN_VERSION		"1.1.9"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -573,7 +573,7 @@ public Action GameInfoCmd(int client, int args)
 			panel.SetTitle(helpstr);
 		}
 		case Powerup: {
-			char helpstr[] = "Welcome to Mechanized Mercs, TF2's Combat Vehicles Mod!\nMechanized Mercs is a gameplay mod where Mannpower Powerups and Random Health or Ammo kits are replaced with Combat Vehicles!\nEngineers are also able to build vehicles using the !vehicle command.\nEach respective vehicle has a specific metal cost required for it to be actively useable.\nAll Vehicle constructs have 500 health until they're activated, build them in a safe spot!\nTo use the Combat Vehicles, simply Jump on top of them or touch them while pressing RELOAD.\nBe careful as enemies can steal any vehicle your team produces.";
+			char helpstr[] = "Welcome to Mechanized Mercs, TF2's Combat Vehicles Mod!\nMechanized Mercs is a gameplay mod where Mannpower Powerups and Random Health or Ammo kits are replaced with Combat Vehicles!\nplayers are also able to build vehicles using the !vehicle command.\nEach respective vehicle has a specific metal cost required for it to be actively useable.\nAll Vehicle constructs have 500 health until they're activated, build them in a safe spot!\nTo use the Combat Vehicles, simply Jump on top of them or touch them while pressing RELOAD.\nBe careful as enemies can steal any vehicle your team produces.";
 			panel.SetTitle(helpstr);
 		}
 		case GunGame: {
@@ -595,12 +595,12 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 
 	else if (IsClientObserver(client) or !IsPlayerAlive(client))
 	{
-		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You Need to be Alive to become Vehicles, build Vehicles, or Vehicle Mainframes.");
+		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You Need to be Alive to become Vehicles, build Vehicles, or build Vehicle Mainframes.");
 		return Plugin_Handled;
 	}
-	else if (GamePlayMode.IntValue != GunGame and BaseFighter(client).Class != TFClass_Engineer)
+	else if (GamePlayMode.IntValue < GunGame and BaseFighter(client).Class != TFClass_Engineer)
 	{
-		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You Need to be an Engineer to build Vehicles or Vehicle Mainframes.");
+		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You Need to be an Engineer to build Vehicle Mainframes.");
 		return Plugin_Handled;
 	}
 	else if ( !MMCvars[BuildSetUpTime].BoolValue and (GameRules_GetRoundState() == RoundState_Preround or GameRules_GetProp("m_bInSetup")) )
@@ -619,26 +619,26 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 		}
 		case Powerup: {
 			Menu tankers = new Menu( MenuHandler_MakeTankPowUp );
-			tankers.AddItem("2", "Ambulance: Heals everybody in Area of Effect radius, Costs 800 Metal");
-			tankers.AddItem("1", "Armored Car: Armed w/ Machinegun and 20mm Cannon, Costs 2,000 Metal");
-			tankers.AddItem("3", "Panzer II: Armed w/ Flamethrower and HE, Arcing Rockets, Costs 3,000 Metal");
-			tankers.AddItem("0", "Panzer IV: Armed w/ Machinegun and Mouse2 Rockets, Costs 4,000 Metal");
-			tankers.AddItem("4", "King Tiger II: Armed w/ Machinegun and Mouse2 Rockets, Costs 5,000 Metal");
-			tankers.AddItem("5", "Marder II: Armed w/ 700 DMG Anti-Tank Rockets, 3,000 Metal");
+			tankers.AddItem("2", "Ambulance: Heals everybody in Area of Effect radius");
+			tankers.AddItem("1", "Armored Car: Armed w/ Machinegun and 20mm Cannon");
+			tankers.AddItem("3", "Panzer II: Armed w/ Flamethrower and HE, Arcing Rockets");
+			tankers.AddItem("0", "Panzer IV: Armed w/ Machinegun and Mouse2 Rockets");
+			tankers.AddItem("4", "King Tiger II: Armed w/ Machinegun and Mouse2 Nuclear Rockets");
+			tankers.AddItem("5", "Marder II: Armed w/ 700 DMG Anti-Tank Rockets");
 			tankers.Display(client, MENU_TIME_FOREVER);
 		}
 		case GunGame: {
 			Menu tankers = new Menu( MenuHandler_GoTank );
-			tankers.AddItem("1", "Armored Car: Armed w/ Machinegun and 40-DMG 20mm Cannon, 600 HP. Can Capture and Self-Heal");
+			tankers.AddItem("1", "Armored Car: Armed w/ Machinegun and 20mm Cannon, Can Capture and Self-Heal");
 			int vehkills = BaseVehicle(client).iVehicleKills;
 			if (vehkills >= 5)
-				tankers.AddItem("3", "Panzer II: Armed w/ Flamethrower and HE, Arcing Rockets, 750 HP.");
+				tankers.AddItem("3", "Panzer II: Armed w/ Flamethrower and HE, Arcing Rockets.");
 			if (vehkills >= 10)
-				tankers.AddItem("0", "Panzer IV: Armed w/ Machinegun and Mouse2 Rockets, 1000 HP.");
+				tankers.AddItem("0", "Panzer IV: Armed w/ Machinegun and Mouse2 Rockets.");
 			if (vehkills >= 15)
-				tankers.AddItem("5", "Marder II: Armed w/ 700 DMG Anti-Tank Rockets, 500 HP.");
+				tankers.AddItem("5", "Marder II: Armed w/ 700 DMG Anti-Tank Rockets.");
 			if (vehkills >= 20)
-				tankers.AddItem("4", "King Tiger II: Armed w/ Machinegun and Mouse2 Rockets, 2000 HP.");
+				tankers.AddItem("4", "King Tiger II: Armed w/ Machinegun and Mouse2 Nuclear Rockets.");
 			tankers.Display(client, MENU_TIME_FOREVER);
 		}
 	}
@@ -665,10 +665,10 @@ public int MenuHandler_MakeTankPowUp(Menu menu, MenuAction action, int client, i
 {
 	if (!IsValidClient(client))
 		return;
-	else if (BaseFighter(client).Class != TFClass_Engineer or IsClientObserver(client) or !IsPlayerAlive(client))
+	else if (IsClientObserver(client) or !IsPlayerAlive(client))
 		return;
 	
-	else if (manager.IsPowerupFull(GetClientTeam(client))) {
+	else if ( manager.IsPowerupFull(GetClientTeam(client)) ) {
 		CPrintToChat(client, "{red}[Mechanized Mercs] {white}Your team has too many built vehicles!");
 		return;
 	}
@@ -758,6 +758,14 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 			}
 			else EmitSoundToClient(attacker, "weapons/wrench_hit_build_fail.wav");
 		}
+		else if (weapon == GetPlayerWeaponSlot(attacker, 2)) {
+			int FixAdd = MMCvars[ConstructMetalAdd].IntValue;
+			if ( TankConstruct[team-2][index][3] < TankConstruct[team-2][index][7] ) {
+				TankConstruct[team-2][index][3] += RoundFloat(FixAdd*0.5);	// Takes 7 seconds with Jag to put in 200 metal
+				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+			}
+			else EmitSoundToClient(attacker, "weapons/wrench_hit_build_fail.wav");
+		}
 		return Plugin_Changed;
 	}
 	return Plugin_Continue;
@@ -778,10 +786,10 @@ public Action OnConstructTouch(int item, int other)
 		}
 		else team = 3;
 		
-		if (TankConstruct[team-2][index][3] >= TankConstruct[team-2][index][7]) {
+		if (!BaseVehicle(other).bIsVehicle and TankConstruct[team-2][index][3] >= TankConstruct[team-2][index][7]) {
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
 			ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle! JUMP to Exit Vehicle");
-			if (!BaseVehicle(other).bIsVehicle and (GetClientButtons(other) & IN_RELOAD)) {
+			if ( GetClientButtons(other) & IN_RELOAD ) {
 				BaseVehicle toucher = BaseVehicle(other);
 				TankConstruct[team-2][index][6] = GetClientHealth(other);
 				toucher.iType = TankConstruct[team-2][index][1];
@@ -1992,7 +2000,7 @@ stock void SetWeaponInvis(const int client, const int alpha)
 {
 	int transparent = alpha;
 	for (int i=0; i<5; i++) {
-		int entity = GetPlayerWeaponSlot(client, i); 
+		int entity = GetPlayerWeaponSlot(client, i);
 		if ( IsValidEdict(entity) and IsValidEntity(entity) )
 		{
 			if (transparent > 255)
