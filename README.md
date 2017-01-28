@@ -33,5 +33,9 @@ Mode #2:
 
 Mode #3:
   This mode is normal, unmodified team fortress 2 with the exception that players of any class can BUILD Vehicles instead of building mainframes and unlocking them.
-  Players can build Vehicle constructs which require metal to build up. non-Engie players can upgrade the metal requirement but they do it slowly, only Engineers can upgrade at normal rate. Each more powerful vehicle requires more metal than the last to build. Once the construct has enough metal required to run, a player can jump or touch the construct and press the Reload button to become the vehicle!
+  
+  Players can build Vehicle constructs which require metal to build up. non-Engie players can upgrade the metal requirement but they do it slowly, only Engineers can upgrade at normal rate.
+  
+  Each more powerful vehicle requires more metal than the last to build. Once the construct has enough metal required to run, a player can jump or touch the construct and press the Reload button to become the vehicle! To exit the vehicle, press the Jump button.
+  
   After becoming a vehicle, you're subject to whatever the vehicle can do and what can be applied to the vehicle.
