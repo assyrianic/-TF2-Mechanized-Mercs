@@ -315,10 +315,6 @@ public void OnPluginStart()
 #if defined _steamtools_included
 	manager.bSteam = LibraryExists("SteamTools");
 #endif
-
-#if defined _updater_included
-	Updater_AddPlugin(UPDATE_URL);
-#endif
 }
 
 public void OnLibraryAdded(const char[] name)
