@@ -3,7 +3,6 @@
 #define LightTankModel			"models/custom/tanks/panzer_short.mdl" // thx to Friagram for saving teh day!
 #define LightTankModelPrefix		"models/custom/tanks/panzer_short"
 
-#define LIGHTROCKET_SPEED		1500.0
 #define LIGHTROCKET_DMG			80.0
 #define LIGHTTANK_ACCELERATION		5.0
 #define LIGHTTANK_SPEEDMAX		250.0
@@ -106,7 +105,7 @@ methodmap CLightTank < CTank
 				bool crit = ( TF2_IsPlayerInCondition(this.index, TFCond_Kritzkrieged) or TF2_IsPlayerInCondition(this.index, TFCond_CritOnWin) );
 				TE_SetupMuzzleFlash(vPosition, vAngles, 9.0, 1);
 				TE_SendToAll();
-				int rocket = ShootRocket(this.index, crit, vPosition, vAngles, LIGHTROCKET_SPEED, LIGHTROCKET_DMG, "", true);
+				int rocket = ShootRocket(this.index, crit, vPosition, vAngles, MMCvars[RocketSpeed].FloatValue*0.3333, LIGHTROCKET_DMG, "", true);
 				if (rocket>MaxClients)
 					SetEntPropEnt(rocket, Prop_Send, "m_hLauncher", GetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon"));
 				Format(snd, PLATFORM_MAX_PATH, "%s%i.mp3", TankShoot, GetRandomInt(1, 3)); //sounds from Call of duty 1
@@ -224,6 +223,9 @@ methodmap CLightTank < CTank
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
 			}
+			if (repairamount)
+				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+			else EmitSoundToClient(engie.index, "weapons/wrench_hit_build_fail.wav");
 		}
 	}
 };

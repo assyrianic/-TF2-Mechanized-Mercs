@@ -11,7 +11,6 @@
 #define TankMove			"acvshtank/tankdrive.mp3"
 #define TankIdle			"acvshtank/tankidle.mp3"
 
-#define ROCKET_SPEED			4000.0
 #define ROCKET_DMG			100.0
 #define TANK_ACCELERATION		3.0
 #define TANK_SPEEDMAX			200.0
@@ -130,7 +129,7 @@ methodmap CTank < BaseVehicle
 				bool crit = ( TF2_IsPlayerInCondition(player, TFCond_Kritzkrieged) or TF2_IsPlayerInCondition(player, TFCond_CritOnWin) );
 				TE_SetupMuzzleFlash(vPosition, vAngles, 9.0, 1);
 				TE_SendToAll();
-				ShootRocket(player, crit, vPosition, vAngles, ROCKET_SPEED, ROCKET_DMG, "");
+				ShootRocket(player, crit, vPosition, vAngles, MMCvars[RocketSpeed].FloatValue, ROCKET_DMG, "");
 				Format(snd, PLATFORM_MAX_PATH, "%s%i.mp3", TankShoot, GetRandomInt(1, 3)); //sounds from Call of duty 1
 				EmitSoundToAll(snd, player, SNDCHAN_AUTO);
 				CreateTimer(1.0, Timer_ReloadTank, this.userid, TIMER_FLAG_NO_MAPCHANGE); //useless, only plays a 'reload' sound
@@ -237,6 +236,9 @@ methodmap CTank < BaseVehicle
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
 			}
+			if (repairamount)
+				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+			else EmitSoundToClient(engie.index, "weapons/wrench_hit_build_fail.wav");
 		}
 	}
 };

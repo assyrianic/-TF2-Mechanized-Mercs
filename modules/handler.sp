@@ -57,6 +57,9 @@ public void ManageDownloads()
 		PrecacheSound(s, true);
 	}
 	PrecacheSound("ui/item_store_add_to_cart.wav", true);
+	PrecacheSound("weapons/wrench_hit_build_success1.wav", true);
+	PrecacheSound("weapons/wrench_hit_build_success2.wav", true);
+	PrecacheSound("weapons/wrench_hit_build_fail.wav", true);
 	for (i=0; i<sizeof(VehicleHorns); i++) {
 		PrecacheSound(VehicleHorns[i], true);
 		Format(s, PLATFORM_MAX_PATH, "sound/%s", VehicleHorns[i]);
@@ -449,7 +452,7 @@ public void ManageVehicleEngieHit(const BaseVehicle base, const BaseVehicle engi
 		case PanzerIII:		ToCLightTank(base).DoEngieInteraction(engie);
 		case Destroyer:		ToCDestroyer(base).DoEngieInteraction(engie);
 	}
-	EmitSoundToClient(engie.index, "ui/item_store_add_to_cart.wav");
+	//EmitSoundToClient(engie.index, "ui/item_store_add_to_cart.wav");
 }
 
 public void ManageVehicleNearDispenser(const BaseVehicle base)
@@ -539,6 +542,10 @@ force the left and right buttons to instead turn player angles and nullify the v
 				EmitSoundToAll(VehicleHorns[GetRandomInt(0, sizeof(VehicleHorns)-1)], client);
 				SetPawnTimer(_ResetHorn, 4.0, player);
 			}
+		}
+		if ( (buttons & IN_DUCK) and (vehflags & FL_ONGROUND) ) {
+			buttons &= ~IN_DUCK;
+			return Plugin_Changed;
 		}
 	}
 	else if (player.Class == TFClass_Soldier or player.Class == TFClass_Engineer) 

@@ -50,6 +50,7 @@ IDEAS:
 ~add 'drifting' or movement de-acceleration to vehicles
 ~have officer melee aid in building structures
 ~gun game mode: everybody starts as armored car, earn kills to unlock the classes. Armored Car can capture, self-heal. Change the Panzer 3 flamethrower to something else for this mode.
+-be able to exit free build vehicles
 
 1 - support vehicles - builds the fastest
 ~Armored Car - 2-3 hits

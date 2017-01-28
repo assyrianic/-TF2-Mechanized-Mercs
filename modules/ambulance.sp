@@ -197,6 +197,9 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
 			}
+			if (repairamount)
+				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+			else EmitSoundToClient(engie.index, "weapons/wrench_hit_build_fail.wav");
 		}
 	}
 };

@@ -325,6 +325,8 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		SetClientOverlay(this.index, "0");
 		SetVariantString("");
 		AcceptEntityInput(this.index, "SetCustomModel");
+		int health = GetEntProp(this.index, Prop_Data, "m_iMaxHealth");
+		SetEntityHealth(this.index, health);
 		//TF2_RegeneratePlayer(this.index);
 	}
 	public void Resupply ()

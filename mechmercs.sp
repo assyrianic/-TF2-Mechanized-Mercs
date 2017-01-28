@@ -12,7 +12,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.0.5"
+#define PLUGIN_VERSION		"1.1.2"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) and (%1) <= MaxClients and IsClientInGame((%1)) )
@@ -64,8 +64,10 @@ enum {
 	OnOfficerHitBuildTime,
 	ArmoredCarGunDmg,
 	MaxSMGAmmo,
+	RocketSpeed,
 	VehicleConstructHP,
 	BuildSetUpTime,
+	ConstructMetalAdd,
 	AmbulanceMetal,
 	ArmoredCarMetal,
 	KingPanzerMetal,
@@ -275,6 +277,10 @@ public void OnPluginStart()
 	MMCvars[Marder3Metal] = CreateConVar("mechmercs_marder2metal", "3000", "how much metal the Marder 2 AT vehicle construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
 	MMCvars[LitePanzerMetal] = CreateConVar("mechmercs_panzer2metal", "3000", "how much metal the Panzer 2 tank construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
 	MMCvars[PanzerMetal] = CreateConVar("mechmercs_panzer4metal", "4000", "how much metal the Panzer 4 tank construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
+	
+	MMCvars[ConstructMetalAdd] = CreateConVar("mechmercs_construct_metaladd", "25", "how much metal each wrench hit adds to tank constructs.", FCVAR_NONE, true, 1.0, true, 999999.0);
+	
+	MMCvars[RocketSpeed] = CreateConVar("mechmercs_tankrocket_speed", "4000.0", "how fast the mouse2 rockets travel.", FCVAR_NONE, true, 1.0, true, 999999.0);
 	
 	AutoExecConfig(true, "Mechanized-Mercenaries");
 	
@@ -707,7 +713,7 @@ public int MenuHandler_MakeTankPowUp(Menu menu, MenuAction action, int client, i
 				}
 			}
 			GetClientAbsAngles(client, flAng); flAng[1] += 90.0;
-			manager.SpawnTankConstruct(client, flEndPos, team, vehicletype);
+			manager.SpawnTankConstruct(client, flEndPos, team, vehicletype, true);
 		}
 	}
 	else if (action == MenuAction_End)
@@ -739,15 +745,18 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 		if ( !strcmp(classname, "tf_weapon_wrench", false) or !strcmp(classname, "tf_weapon_robot_arm", false) )
 		{
 			int iCurrentMetal = GetEntProp(attacker, Prop_Data, "m_iAmmo", 4, 3);
-			int FixAdd = 25;
-			if ( iCurrentMetal ) {
+			int FixAdd = MMCvars[ConstructMetalAdd].IntValue;
+			if ( iCurrentMetal > 0 ) {
 				if (iCurrentMetal < FixAdd)
 					FixAdd = iCurrentMetal;
 
 				TankConstruct[team-2][index][3] += FixAdd;	// Takes 7 seconds with Jag to put in 200 metal
 				SetEntProp(attacker, Prop_Data, "m_iAmmo", iCurrentMetal-FixAdd, 4, 3);
-				EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav");
+				if (FixAdd > 0) {
+					EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+				}
 			}
+			else EmitSoundToClient(attacker, "weapons/wrench_hit_build_fail.wav");
 		}
 		return Plugin_Changed;
 	}
@@ -780,13 +789,14 @@ public Action OnConstructTouch(int item, int other)
 		}
 		if (TankConstruct[team-2][index][3] >= metalcost) {
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
-			ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle!");
+			ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle! JUMP to Exit Vehicle");
 			if (GetClientButtons(other) & IN_RELOAD) {
 				BaseVehicle toucher = BaseVehicle(other);
 				toucher.iType = TankConstruct[team-2][index][1];
 				toucher.bIsVehicle = true;
 				toucher.ConvertToVehicle();
 				toucher.VehHelpPanel();
+				SetPawnTimer(SetConstructAttribs, 0.12, toucher, team, index);
 				float VehLoc[3]; VehLoc = Vec_GetEntPropVector(item, Prop_Data, "m_vecAbsOrigin");
 				TeleportEntity(other, VehLoc, NULL_VECTOR, NULL_VECTOR);
 				
@@ -796,6 +806,18 @@ public Action OnConstructTouch(int item, int other)
 		}
 	}
 	return Plugin_Continue;
+}
+
+public void SetConstructAttribs(const BaseVehicle veh, const int team, const int index)
+{
+	int Turret = GetEntPropEnt(veh.index, Prop_Send, "m_hActiveWeapon");
+	if (TankConstruct[team-2][index][4] > 0) {
+		if (TankConstruct[team-2][index][1] == PanzerIII)
+			SetWeaponAmmo(Turret, TankConstruct[team-2][index][4]);
+		else SetWeaponClip(Turret, TankConstruct[team-2][index][4]);
+	}
+	if (TankConstruct[team-2][index][5] > 0)
+		veh.iHealth = TankConstruct[team-2][index][5];
 }
 
 public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int select)
@@ -1071,6 +1093,28 @@ public void OnPreThink(int client)
 
 	BaseVehicle player = BaseVehicle(client);
 	if (player.bIsVehicle) {
+		if ((GetClientButtons(client) & IN_JUMP) and GamePlayMode.IntValue == Powerup ) {
+			// record vehicle info so we can recreate our vehicle construct as ready to use
+			int team = GetClientTeam(client);
+			float vec_origin[3]; GetClientAbsOrigin(client, vec_origin);
+			//vec_origin[2] += 10.0;
+			if (BringClientToSide(client, vec_origin)) {	// found safe place for player to be
+				int index = manager.SpawnTankConstruct(client, vec_origin, team, player.iType, false);
+				if (index != -1) {
+					TankConstruct[team-2][index][3] = 999999999;
+					int Turret = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+					TankConstruct[team-2][index][4] = (player.iType == PanzerIII) ? GetWeaponAmmo(Turret) : GetWeaponClip(Turret);
+					TankConstruct[team-2][index][5] = player.iHealth;
+					
+					// we got our info, let's get out of the vehicle.
+					player.bIsVehicle = false;
+					player.Reset();
+					TF2_RegeneratePlayer(client);
+				}
+			}
+			else CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't exit the vehicle in this area.");
+		}
+			
 		if ( IsNearSpencer(client) )
 			ManageVehicleNearDispenser(player); // in handler.sp
 		
@@ -1205,11 +1249,15 @@ public Action OnGarageTakeDamage(int victim, int &attacker, int &inflictor, floa
 				iCurrentMetal -= repairamount;
 				SetEntProp(attacker, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
 				SetEntProp(victim, Prop_Data, "m_iHealth", health);
-				EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav");
+				if (repairamount)
+					EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+				else EmitSoundToClient(attacker, "weapons/wrench_hit_build_fail.wav");
+				//EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav");
 			}
 			if (GarageBuildTime[team-2][offset] > 0.0) {
 				GarageBuildTime[team-2][offset] -= MMCvars[OnEngieHitBuildTime].FloatValue;
-				EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav", _, SNDCHAN_AUTO, _, _, _, 80);
+				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+				//EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav", _, SNDCHAN_AUTO, _, _, _, 80);
 			}
 		}
 		/*		DIDN'T WORK
@@ -1230,7 +1278,8 @@ public Action OnGarageTakeDamage(int victim, int &attacker, int &inflictor, floa
 		{
 			if (GarageBuildTime[team-2][offset] > 0.0) {
 				GarageBuildTime[team-2][offset] -= MMCvars[OnOfficerHitBuildTime].FloatValue;
-				EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav", _, SNDCHAN_AUTO, _, _, _, 80);
+				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+				//EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav", _, SNDCHAN_AUTO, _, _, _, 80);
 			}
 		}
 		return Plugin_Changed;
@@ -1321,10 +1370,10 @@ public Action Timer_GarageThink(Handle timer)
 			continue;
 		else if ( GetClientButtons(i) & IN_SCORE )
 			continue;
+		else if (GetClientTeam(i) < 2)
+			continue;
 
 		team = GetClientTeam(i)-2;
-		if (team < 0)
-			team=0;
 		
 		switch (team) {
 			case 0: { buildinghp[0] = health[team][0]; buildinghp[1] = health[team][1]; buildinghp[2] = health[team][2]; }
@@ -1447,6 +1496,7 @@ public Action OnPowUpTouch(int item, int player)
 			toucher.VehHelpPanel();
 			float VehLoc[3]; VehLoc = Vec_GetEntPropVector(item, Prop_Data, "m_vecAbsOrigin");
 			TeleportEntity(player, VehLoc, NULL_VECTOR, NULL_VECTOR);
+			
 			CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(item) );
 			
 			if (GamePlayMode.IntValue == Powerup) {
@@ -2045,13 +2095,13 @@ stock TF2Item PrepareItemHandle(TF2Item hItem, char[] name = "", int index = -1,
 If you need to use this and your function uses 3 parameters, modify it if necessary.
 BUG/GLITCH: For some strange reason, SetPawnTimer doesn't work when u attempt to callback stock functions, interesting...
 */
-stock void SetPawnTimer(Function func, float thinktime = 0.1, any param1 = -999, any param2 = -999)
+stock void SetPawnTimer(Function func, float thinktime = 0.1, any param1 = -999, any param2 = -999, any param3 = -999)
 {
 	DataPack thinkpack = new DataPack();
 	thinkpack.WriteFunction(func);
 	thinkpack.WriteCell(param1);
 	thinkpack.WriteCell(param2);
-
+	thinkpack.WriteCell(param3);
 	CreateTimer(thinktime, DoThink, thinkpack, TIMER_DATA_HNDL_CLOSE);
 }
 
@@ -2068,6 +2118,10 @@ public Action DoThink(Handle hTimer, DataPack hndl)
 	any param2 = hndl.ReadCell();
 	if ( param2 != -999 )
 		Call_PushCell(param2);
+		
+	any param3 = hndl.ReadCell();
+	if ( param3 != -999 )
+		Call_PushCell(param3);
 
 	Call_Finish();
 	return Plugin_Continue;
@@ -2200,4 +2254,56 @@ stock int QueryPlayers(const float origin[3], const float radius, int[] array, c
 	}
 	return count;
 }
+stock bool IsClientStuck(const int iEntity, const float flOrigin[3])
+{
+	//float flOrigin[3]; GetEntPropVector(iEntity, Prop_Send, "m_vecOrigin", flOrigin);
+	float flMins[3]; GetEntPropVector(iEntity, Prop_Send, "m_vecMins", flMins);
+	float flMaxs[3]; GetEntPropVector(iEntity, Prop_Send, "m_vecMaxs", flMaxs);
 
+	TR_TraceHullFilter(flOrigin, flOrigin, flMins, flMaxs, MASK_PLAYERSOLID, TraceFilterNotSelf, iEntity);
+	return TR_DidHit();
+}
+public bool TraceFilterNotSelf(int entity, int contentsMask, any client)
+{
+	if (entity == client)
+		return false;
+	return true;
+}
+stock bool BringClientToSide(const int client, const float flOrigin[3])
+{
+	float vec_modifier[3];
+	const float flMove = 85.0;
+	/*
+	vec_modifier = flOrigin; vec_modifier[0] += flMove;	// check x-axis
+	if (!IsClientStuck(client, vec_modifier)) {
+		TeleportEntity(client, vec_modifier, NULL_VECTOR, NULL_VECTOR);
+		return true;
+	}
+	vec_modifier = flOrigin; vec_modifier[0] -= flMove;
+	if (!IsClientStuck(client, vec_modifier)) {
+		TeleportEntity(client, vec_modifier, NULL_VECTOR, NULL_VECTOR);
+		return true;
+	}
+	vec_modifier = flOrigin; vec_modifier[1] += flMove;	// check y-axis
+	if (!IsClientStuck(client, vec_modifier)) {
+		TeleportEntity(client, vec_modifier, NULL_VECTOR, NULL_VECTOR);
+		return true;
+	}
+	vec_modifier = flOrigin; vec_modifier[1] -= flMove;
+	if (!IsClientStuck(client, vec_modifier)) {
+		TeleportEntity(client, vec_modifier, NULL_VECTOR, NULL_VECTOR);
+		return true;
+	}
+	*/
+	vec_modifier = flOrigin; vec_modifier[2] += flMove;	// check z-axis
+	if (!IsClientStuck(client, vec_modifier)) {
+		TeleportEntity(client, vec_modifier, NULL_VECTOR, NULL_VECTOR);
+		return true;
+	}
+	vec_modifier = flOrigin; vec_modifier[2] -= flMove;
+	if (!IsClientStuck(client, vec_modifier)) {
+		TeleportEntity(client, vec_modifier, NULL_VECTOR, NULL_VECTOR);
+		return true;
+	}
+	return false;
+}

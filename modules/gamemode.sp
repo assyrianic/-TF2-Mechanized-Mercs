@@ -28,12 +28,10 @@ float
 
 #define	MAX_CONSTRUCT_VEHICLES	5
 
-int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][4];
-
-
+int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][6];
 /* 0-red ; 1-blue */
 /*  */
-/* 0 = entity ref ; 1 = vehicle type ; 2 = builder ; 3 = metal sink */
+/* 0 = entity ref ; 1 = vehicle type ; 2 = builder ; 3 = metal sink ; 4 = saved clipsize ; 5 = saved health ;  */
 
 methodmap GameModeManager {
 	public GameModeManager() {}
@@ -95,16 +93,14 @@ methodmap GameModeManager {
 		}
 		*/
 	}
-	public int GetGarageRefFlags(const int num)
+	public int GetGarageRefFlags(const int index)
 	{
-		int flag, index;
-		if (num < 0)
-			index=0;
-		if (GarageRefs[index][0] and IsValidEntity(this.GetGarage(index, 0)))
+		int flag;
+		if (GarageRefs[index][SUPPORTGARAGE] and IsValidEntity(this.GetGarage(index, SUPPORTGARAGE)))
 			flag |= SUPPORTBUILT;
-		if (GarageRefs[index][1] and IsValidEntity(this.GetGarage(index, 1)))
+		if (GarageRefs[index][OFFENSEGARAGE] and IsValidEntity(this.GetGarage(index, OFFENSEGARAGE)))
 			flag |= OFFENSIVEBUILT;
-		if (GarageRefs[index][2] and IsValidEntity(this.GetGarage(index, 2)))
+		if (GarageRefs[index][HEAVYGARAGE] and IsValidEntity(this.GetGarage(index, HEAVYGARAGE)))
 			flag |= HEAVYBUILT;
 		return flag;
 	}
@@ -143,7 +139,7 @@ methodmap GameModeManager {
 		}
 		return -1;
 	}
-	public int SpawnTankConstruct(const int builder, float vecOrigin[3], const int team, const int vehtype)
+	public int SpawnTankConstruct(const int builder, float vecOrigin[3], const int team, const int vehtype, bool ask)
 	{
 		int construct = CreateEntityByName("prop_dynamic_override");
 		if ( construct <= 0 or !IsValidEdict(construct) )
@@ -189,7 +185,7 @@ methodmap GameModeManager {
 		mins = Vec_GetEntPropVector(construct, Prop_Send, "m_vecMins");
 		maxs = Vec_GetEntPropVector(construct, Prop_Send, "m_vecMaxs");
 
-		if ( CanBuildHere(vecOrigin, mins, maxs) ) {
+		if ( !ask or CanBuildHere(vecOrigin, mins, maxs) ) {
 			DispatchSpawn(construct);
 			SetEntProp( construct, Prop_Send, "m_nSolidType", 6 );
 			TeleportEntity(construct, vecOrigin, NULL_VECTOR, NULL_VECTOR);
@@ -222,13 +218,16 @@ methodmap GameModeManager {
 				TankConstruct[team-2][index][1] = vehtype;
 				TankConstruct[team-2][index][2] = GetClientUserId(builder);
 				TankConstruct[team-2][index][3] = 0;
+				TankConstruct[team-2][index][4] = 0;
+				TankConstruct[team-2][index][5] = 0;
 				return index;
 			}
 		}
 		else {
 			CPrintToChat(builder, "{red}[Mechanized Mercs] {white}You can't build that Vehicle there.");
 			CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
-			SpawnVehicleGarageMenu(builder, -1);
+			if (ask)
+				SpawnVehicleGarageMenu(builder, -1);
 		}
 		return -1;
 	}

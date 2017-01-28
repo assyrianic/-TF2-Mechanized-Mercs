@@ -3,7 +3,6 @@
 #define KingTankModel			"models/custom/tanks/tiger2.mdl" //thx to Friagram for saving teh day!
 #define KingTankModelPrefix		"models/custom/tanks/tiger2"
 
-#define KINGROCKET_SPEED		4000.0
 #define KINGROCKET_DMG			150.0
 #define KINGTANK_ACCELERATION		2.0
 #define KINGTANK_SPEEDMAX		150.0
@@ -99,7 +98,7 @@ methodmap CKingTank < CTank
 				bool crit = ( TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) or TF2_IsPlayerInCondition(client, TFCond_CritOnWin) );
 				TE_SetupMuzzleFlash(vPosition, vAngles, 9.0, 1);
 				TE_SendToAll();
-				ShootRocket(client, crit, vPosition, vAngles, KINGROCKET_SPEED, KINGROCKET_DMG, "");
+				ShootRocket(client, crit, vPosition, vAngles, MMCvars[RocketSpeed].FloatValue, KINGROCKET_DMG, "");
 				Format(snd, PLATFORM_MAX_PATH, "%s%i.mp3", TankShoot, GetRandomInt(1, 3)); //sounds from Call of duty 1
 				EmitSoundToAll(snd, client, SNDCHAN_AUTO, _, _, _, 80);
 				CreateTimer(1.0, Timer_ReloadTank, this.userid, TIMER_FLAG_NO_MAPCHANGE); //useless, only plays a 'reload' sound
@@ -206,6 +205,9 @@ methodmap CKingTank < CTank
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
 			}
+			if (repairamount)
+				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+			else EmitSoundToClient(engie.index, "weapons/wrench_hit_build_fail.wav");
 		}
 	}
 };
