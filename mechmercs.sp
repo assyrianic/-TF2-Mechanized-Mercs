@@ -12,10 +12,10 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.1.4"
+#define PLUGIN_VERSION		"1.1.5"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
-#define IsClientValid(%1)	( (%1) and (%1) <= MaxClients and IsClientInGame((%1)) )
+#define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
 #define PLYR			MAXPLAYERS+1
 
 #define RESPAWNER
@@ -781,7 +781,7 @@ public Action OnConstructTouch(int item, int other)
 		if (TankConstruct[team-2][index][3] >= TankConstruct[team-2][index][7]) {
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
 			ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle! JUMP to Exit Vehicle");
-			if (GetClientButtons(other) & IN_RELOAD) {
+			if (!BaseVehicle(other).bIsVehicle and (GetClientButtons(other) & IN_RELOAD)) {
 				BaseVehicle toucher = BaseVehicle(other);
 				TankConstruct[team-2][index][6] = GetClientHealth(other);
 				toucher.iType = TankConstruct[team-2][index][1];
