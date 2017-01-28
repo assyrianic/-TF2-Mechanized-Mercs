@@ -4,7 +4,7 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.1.9"
+			"Latest"	"1.2.0"
 		}
 		
 		"Notes"	"More info @ www.sourcemod.net. Changes in 1.1.9:"
