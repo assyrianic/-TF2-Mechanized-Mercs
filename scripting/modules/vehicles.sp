@@ -1,13 +1,13 @@
 
-#include "base.sp" /* DO NOT DELETE/MODIFY THIS LINE */
+#include "modules/base.sp" /* DO NOT DELETE/MODIFY THIS LINE */
 
-#include "tank.sp"
-#include "armoredcar.sp"
-#include "ambulance.sp"
+#include "modules/tank.sp"
+#include "modules/armoredcar.sp"
+#include "modules/ambulance.sp"
 
-#include "kingpanzer.sp"
-#include "panzer3.sp"
-#include "marder3.sp"
+#include "modules/kingpanzer.sp"
+#include "modules/panzer3.sp"
+#include "modules/marder3.sp"
 
 /*
 IDEAS

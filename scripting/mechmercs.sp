@@ -5,9 +5,15 @@
 #include <sdkhooks>
 #include <morecolors>
 
+#define UPDATE_URL		"https://raw.githubusercontent.com/assyrianic/-TF2-Mechanized-Mercs/master/updater.txt"
+
 #undef REQUIRE_EXTENSIONS
 #tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
+
+#undef REQUIRE_PLUGIN
+#tryinclude <updater>
+#define REQUIRE_PLUGIN
 
 #pragma semicolon		1
 #pragma newdecls		required
@@ -285,7 +291,7 @@ public void OnPluginStart()
 	AutoExecConfig(true, "Mechanized-Mercenaries");
 	
 	hHudText = CreateHudSynchronizer();
-	manager = GameModeManager(); // In gamemodemanager.sp
+	manager = GameModeManager();	// In gamemodemanager.sp
 	
 	HookEvent("player_death", PlayerDeath, EventHookMode_Pre);
 	HookEvent("player_hurt", PlayerHurt, EventHookMode_Pre);
@@ -295,7 +301,7 @@ public void OnPluginStart()
 	HookEvent("player_builtobject", ObjectBuilt);
 	HookEvent("player_upgradedobject", ObjectBuilt);
 	//HookEvent("teamplay_round_start", RoundStart);
-	HookEvent("teamplay_round_win", RoundEnd); // 773-865-9121
+	HookEvent("teamplay_round_win", RoundEnd);
 
 	ManageDownloads(); // in handler.sp
 
@@ -309,6 +315,10 @@ public void OnPluginStart()
 #if defined _steamtools_included
 	manager.bSteam = LibraryExists("SteamTools");
 #endif
+
+#if defined _updater_included
+	Updater_AddPlugin(UPDATE_URL);
+#endif
 }
 
 public void OnLibraryAdded(const char[] name)
@@ -316,6 +326,10 @@ public void OnLibraryAdded(const char[] name)
 #if defined _steamtools_included
 	if (!strcmp(name, "SteamTools", false))
 		manager.bSteam = true;
+#endif
+#if defined _updater_included
+	if (!strcmp(name, "updater"))
+		Updater_AddPlugin(UPDATE_URL);
 #endif
 }
 public void OnLibraryRemoved(const char[] name)
@@ -337,6 +351,15 @@ public void OnConfigsExecuted()
 		}
 #endif
 	}
+}
+
+//	UPDATER Stuff
+public void OnAllPluginsLoaded() 
+{
+#if defined _updater_included
+	if ( LibraryExists("updater") )
+		Updater_AddPlugin(UPDATE_URL);
+#endif
 }
 
 public void OnClientPutInServer(int client)
