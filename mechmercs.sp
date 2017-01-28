@@ -442,7 +442,7 @@ public Action Timer_VehicleDeath(Handle timer, any userid)
 		BaseVehicle player = BaseVehicle(client);
 		if (player.iHealth <= 0)
 			player.iHealth = 0; // ded, k!big soup rice
-		ManageVehicleDeath(player); // in handler.sp
+		ManageVehicleDeath(player); // in handler.sp Powerup
 	}
 	return Plugin_Continue;
 }
@@ -1147,7 +1147,7 @@ public Action OnGarageTakeDamage(int victim, int &attacker, int &inflictor, floa
 		return Plugin_Continue;
 	
 	int team = GetClientTeam(attacker);
-	if ( team == GetEntProp(victim, Prop_Data, "m_iTeamNum") ) {
+	if ( team == GetEntProp(victim, Prop_Data, "m_iTeamNum") and IsClientValid(attacker) ) {
 		damage = 0.0;
 		int maxhp, offset;
 		char tName[64]; GetEntPropString(victim, Prop_Data, "m_iName", tName, sizeof(tName));
@@ -1231,7 +1231,7 @@ public Action RemoveEnt(Handle timer, any entid)
 	return Plugin_Continue;
 }
 /*
-When using intended garage models, have going inside the garages heal and rearm the respective vehicle.
+	When using intended garage models, have going inside the garages heal and rearm the respective vehicle.
 */
 public Action Timer_GarageThink(Handle timer)
 {

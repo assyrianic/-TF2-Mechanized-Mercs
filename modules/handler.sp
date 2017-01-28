@@ -267,6 +267,7 @@ public void ManageVehicleDeath(const BaseVehicle base)
 	if (GamePlayMode.IntValue == Powerup) {
 		base.bIsVehicle = false;
 		base.Reset();
+		//TF2_RegeneratePlayer(base.index);
 	}
 }
 
@@ -326,12 +327,13 @@ public Action ManageOnVehicleTakeDamage(const BaseVehicle victim, int &attacker,
 				damage *= 0.0;
 				return Plugin_Changed;
 			}
-			if (attacker > MaxClients or attacker <= 0)	// if null attacker, just kill the vehicle outright
+			if ( (attacker > MaxClients or attacker <= 0) and !(damagetype & DMG_FALL) )	// if null attacker, just kill the vehicle outright
 			{
 				//TF2_IgnitePlayer(tanker, attacker);
 				CreateTimer(0.1, Timer_VehicleDeath, victim.userid);
+				return Plugin_Continue;
 			}
-			else if ( damage > 100.0 and !strcmp(classname, "tf_weapon_knife", false) ) // Vehicles shouldn't die from a single backstab
+			else if ( damage > 100.0 and !strcmp(classname, "tf_weapon_knife", false) )	// Vehicles shouldn't die from a single backstab
 				damage = 1.67;
 
 			if ( damagetype & DMG_CRIT )	// Vehicles don't take crits, think of them as Building Human hybrids.
