@@ -1,0 +1,32 @@
+"Updater"
+{
+	"Information"
+	{
+		"Version"
+		{
+			"Latest"	"1.1.9"
+		}
+		
+		"Notes"	"More info @ www.sourcemod.net. Changes in 1.1.9:"
+		"Notes"	"added all players to be able to build vehicles"
+		"Notes"	"Minor code changes"
+	}
+	
+	"Files"
+	{	
+		"Plugin"	"Path_SM/plugins/mechmercs.smx"
+		
+		"Source"	"Path_SM/scripting/mechmercs.sp"
+		"Source"	"Path_SM/scripting/modules/ambulance.sp"
+		"Source"	"Path_SM/scripting/modules/armoredcar.sp"
+		"Source"	"Path_SM/scripting/modules/base.sp"
+		"Source"	"Path_SM/scripting/modules/events.sp"
+		"Source"	"Path_SM/scripting/modules/gamemode.sp"
+		"Source"	"Path_SM/scripting/modules/handler.sp"
+		"Source"	"Path_SM/scripting/modules/kingpanzer.sp"
+		"Source"	"Path_SM/scripting/modules/marder3.sp"
+		"Source"	"Path_SM/scripting/modules/panzer3.sp"
+		"Source"	"Path_SM/scripting/modules/tank.sp"
+		"Source"	"Path_SM/scripting/modules/vehicles.sp"
+	}
+}
