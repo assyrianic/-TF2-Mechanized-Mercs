@@ -32,6 +32,6 @@ Mode #2:
   Difference in this mode is that there are no human classes, ambulance is locked, and that Armored Car has an unlocked ability to regenerate health and the ability to capture objectives, thus making them always valuable.
 
 Mode #3:
-  This mode is normal, unmodified team fortress 2 with the exception that Engineers can BUILD Vehicles instead of building mainframes and unlocking them.
-  Engineers can build Vehicle constructs which require metal to build up. Each more powerful vehicle requires more metal than the last to build. Once the construct has enough metal required to run, a player can jump or touch the construct and press the Reload button to become the vehicle!
+  This mode is normal, unmodified team fortress 2 with the exception that players of any class can BUILD Vehicles instead of building mainframes and unlocking them.
+  Players can build Vehicle constructs which require metal to build up. non-Engie players can upgrade the metal requirement but they do it slowly, only Engineers can upgrade at normal rate. Each more powerful vehicle requires more metal than the last to build. Once the construct has enough metal required to run, a player can jump or touch the construct and press the Reload button to become the vehicle!
   After becoming a vehicle, you're subject to whatever the vehicle can do and what can be applied to the vehicle.
