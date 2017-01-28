@@ -12,7 +12,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.0.3"
+#define PLUGIN_VERSION		"1.0.5"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) and (%1) <= MaxClients and IsClientInGame((%1)) )
@@ -66,6 +66,12 @@ enum {
 	MaxSMGAmmo,
 	VehicleConstructHP,
 	BuildSetUpTime,
+	AmbulanceMetal,
+	ArmoredCarMetal,
+	KingPanzerMetal,
+	Marder3Metal,
+	LitePanzerMetal,
+	PanzerMetal,
 	SupportHP,
 	OffensiveHP,
 	HeavySupportHP,
@@ -262,6 +268,13 @@ public void OnPluginStart()
 	MMCvars[LightPanzerHP] = CreateConVar("mechmercs_lighttankhp", "750", "how much max health the Panzer 3 Light tank vehicle gets", FCVAR_NONE, true, 1.0, true, 99999.0);
 	
 	MMCvars[Panzer4HP] = CreateConVar("mechmercs_panzer4hp", "1000", "how much max health the Panzer 4 tank vehicle gets", FCVAR_NONE, true, 1.0, true, 99999.0);
+	
+	MMCvars[AmbulanceMetal] = CreateConVar("mechmercs_ambulancemetal", "800", "how much metal the Ambulance construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
+	MMCvars[ArmoredCarMetal] = CreateConVar("mechmercs_armoredcarmetal", "2000", "how much metal the Armored Car construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
+	MMCvars[KingPanzerMetal] = CreateConVar("mechmercs_kingtigermetal", "5000", "how much metal the King Tiger tank construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
+	MMCvars[Marder3Metal] = CreateConVar("mechmercs_marder2metal", "3000", "how much metal the Marder 2 AT vehicle construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
+	MMCvars[LitePanzerMetal] = CreateConVar("mechmercs_panzer2metal", "3000", "how much metal the Panzer 2 tank construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
+	MMCvars[PanzerMetal] = CreateConVar("mechmercs_panzer4metal", "4000", "how much metal the Panzer 4 tank construct requires to use.", FCVAR_NONE, true, 0.0, true, 999999.0);
 	
 	AutoExecConfig(true, "Mechanized-Mercenaries");
 	
@@ -758,11 +771,12 @@ public Action OnConstructTouch(int item, int other)
 		
 		int metalcost;
 		switch ( TankConstruct[team-2][index][1] ) {
-			case Tank:			metalcost = 4000;
-			case ArmoredCar:		metalcost = 2000;
-			case Ambulance:			metalcost = 600;
-			case KingPanzer:		metalcost = 5000;
-			case PanzerIII, Destroyer:	metalcost = 3000;
+			case Tank:			metalcost = MMCvars[PanzerMetal].IntValue;
+			case ArmoredCar:		metalcost = MMCvars[ArmoredCarMetal].IntValue;
+			case Ambulance:			metalcost = MMCvars[AmbulanceMetal].IntValue;
+			case KingPanzer:		metalcost = MMCvars[KingPanzerMetal].IntValue;
+			case PanzerIII:			metalcost = MMCvars[LitePanzerMetal].IntValue;
+			case Destroyer:			metalcost = MMCvars[Marder3Metal].IntValue;
 		}
 		if (TankConstruct[team-2][index][3] >= metalcost) {
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
@@ -1041,11 +1055,12 @@ public void OnPreThink(int client)
 			
 			int metalcost;
 			switch ( TankConstruct[team-2][index][1] ) {
-				case Tank:			metalcost = 4000;
-				case ArmoredCar:		metalcost = 2000;
-				case Ambulance:			metalcost = 800;
-				case KingPanzer:		metalcost = 5000;
-				case PanzerIII, Destroyer:	metalcost = 3000;
+				case Tank:			metalcost = MMCvars[PanzerMetal].IntValue;
+				case ArmoredCar:		metalcost = MMCvars[ArmoredCarMetal].IntValue;
+				case Ambulance:			metalcost = MMCvars[AmbulanceMetal].IntValue;
+				case KingPanzer:		metalcost = MMCvars[KingPanzerMetal].IntValue;
+				case PanzerIII:			metalcost = MMCvars[LitePanzerMetal].IntValue;
+				case Destroyer:			metalcost = MMCvars[Marder3Metal].IntValue;
 			}
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
 			if (TankConstruct[team-2][index][3] < metalcost)
