@@ -365,10 +365,10 @@ public void OnClientPutInServer(int client)
 	user.flSoundDelay=0.0;
 	user.flIdleSound=0.0;
 
-	ManageConnect(client); // in handler.sp
+	ManageConnect(client);	// in handler.sp
 }
 
-public Action OnTouch(int client, int other) //simulate "crush, roadkill" damage
+public Action OnTouch(int client, int other)	// simulate "crush, roadkill" damage
 {
 	if (0 < other <= MaxClients) {
 		BaseVehicle player = BaseVehicle(client), victim = BaseVehicle(other);
