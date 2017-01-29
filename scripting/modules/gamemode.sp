@@ -28,19 +28,17 @@ float
 
 #define	MAX_CONSTRUCT_VEHICLES	5
 
+#define ENTREF		0
+#define VEHTYPE		1
+#define BUILDER		2
+#define METAL		3
+#define AMMO		4
+#define HEALTH		5
+#define PLYRHP		6
+#define MAXMETAL	7
+
 int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][8];
 /* 0-red ; 1-blue */
-/*  */
-/*
-0 = entity ref ;
-1 = vehicle type ;
-2 = builder ;
-3 = metal sink ;
-4 = saved clipsize ;
-5 = saved health ;
-6 = saved player health ;
-7 = max metal needed to finish ;
-*/
 
 methodmap GameModeManager {
 	public GameModeManager() {}
@@ -117,12 +115,12 @@ methodmap GameModeManager {
 	{
 		int count=0;
 		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
-			if (!TankConstruct[team-2][k][0])
+			if (!TankConstruct[team-2][k][ENTREF])
 				continue;
-			else if (TankConstruct[team-2][k][0] and !IsValidEntity(EntRefToEntIndex(TankConstruct[team-2][k][0])))
-				TankConstruct[team-2][k][0] = 0;
+			else if (TankConstruct[team-2][k][ENTREF] and !IsValidEntity(EntRefToEntIndex(TankConstruct[team-2][k][ENTREF])))
+				TankConstruct[team-2][k][ENTREF] = 0;
 			
-			if (TankConstruct[team-2][k][0])
+			if (TankConstruct[team-2][k][ENTREF])
 				++count;
 		}
 		return (count == MAX_CONSTRUCT_VEHICLES);
@@ -130,7 +128,7 @@ methodmap GameModeManager {
 	public int GetNextEmptyPowerUpSlot(const int team)
 	{
 		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
-			if (TankConstruct[team-2][k][0])
+			if (TankConstruct[team-2][k][ENTREF])
 				continue;
 			return k;
 		}
@@ -139,11 +137,11 @@ methodmap GameModeManager {
 	public int FindEntityPowerUpIndex(const int team, const int entity)
 	{
 		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
-			if (!TankConstruct[team-2][k][0])
+			if (!TankConstruct[team-2][k][ENTREF])
 				continue;
-			else if (TankConstruct[team-2][k][0] and !IsValidEntity(EntRefToEntIndex(TankConstruct[team-2][k][0])))
-				TankConstruct[team-2][k][0] = 0;
-			else if (EntRefToEntIndex(TankConstruct[team-2][k][0]) == entity)
+			else if (TankConstruct[team-2][k][ENTREF] and !IsValidEntity(EntRefToEntIndex(TankConstruct[team-2][k][ENTREF])))
+				TankConstruct[team-2][k][ENTREF] = 0;
+			else if (EntRefToEntIndex(TankConstruct[team-2][k][ENTREF]) == entity)
 				return k;
 		}
 		return -1;
@@ -230,14 +228,14 @@ methodmap GameModeManager {
 					CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
 					return -1;
 				}
-				TankConstruct[team-2][index][0] = EntIndexToEntRef(construct);
-				TankConstruct[team-2][index][1] = vehtype;
-				TankConstruct[team-2][index][2] = GetClientUserId(builder);
-				TankConstruct[team-2][index][3] = 0;
-				TankConstruct[team-2][index][4] = 0;
-				TankConstruct[team-2][index][5] = 0;
-				//TankConstruct[team-2][index][6] = 0;
-				TankConstruct[team-2][index][7] = metal;
+				TankConstruct[team-2][index][ENTREF] = EntIndexToEntRef(construct);
+				TankConstruct[team-2][index][VEHTYPE] = vehtype;
+				TankConstruct[team-2][index][BUILDER] = GetClientUserId(builder);
+				TankConstruct[team-2][index][METAL] = 0;
+				TankConstruct[team-2][index][AMMO] = 0;
+				TankConstruct[team-2][index][HEALTH] = 0;
+				//TankConstruct[team-2][index][PLYRHP] = 0;
+				TankConstruct[team-2][index][MAXMETAL] = metal;
 				return index;
 			}
 		}

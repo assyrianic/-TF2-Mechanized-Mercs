@@ -4,16 +4,16 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.2.0"
+			"Latest"	"1.2.2"
 		}
 		
-		"Notes"	"More info @ www.sourcemod.net. Changes in 1.1.9:"
-		"Notes"	"added all players to be able to build vehicles"
+		"Notes"	"More info @ www.sourcemod.net. Changes in 1.2.2:"
+		"Notes"	"some glitch fixes"
 		"Notes"	"Minor code changes"
 	}
 	
 	"Files"
-	{	
+	{
 		"Plugin"	"Path_SM/plugins/mechmercs.smx"
 		
 		"Source"	"Path_SM/scripting/mechmercs.sp"

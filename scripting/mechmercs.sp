@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.2.0"
+#define PLUGIN_VERSION		"1.2.2"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -469,6 +469,9 @@ public Action Timer_MakePlayerVehicle(Handle timer, any userid)
 		//SetEntPropEnt(player.index, Prop_Send, "m_hVehicle", player.index);
 		if (bGasPowered.BoolValue)
 			player.flGas = StartingFuel.FloatValue;
+		
+		//SetVariantString("1");
+		//AcceptEntityInput(client, "SetForcedTauntCam");
 	}
 	return Plugin_Continue;
 }
@@ -765,11 +768,11 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 		{
 			int iCurrentMetal = GetEntProp(attacker, Prop_Data, "m_iAmmo", 4, 3);
 			int FixAdd = MMCvars[ConstructMetalAdd].IntValue;
-			if ( iCurrentMetal > 0 and TankConstruct[team-2][index][3] < TankConstruct[team-2][index][7] ) {
+			if ( iCurrentMetal > 0 and TankConstruct[team-2][index][METAL] < TankConstruct[team-2][index][MAXMETAL] ) {
 				if (iCurrentMetal < FixAdd)
 					FixAdd = iCurrentMetal;
 
-				TankConstruct[team-2][index][3] += FixAdd;	// Takes 7 seconds with Jag to put in 200 metal
+				TankConstruct[team-2][index][METAL] += FixAdd;	// Takes 7 seconds with Jag to put in 200 metal
 				SetEntProp(attacker, Prop_Data, "m_iAmmo", iCurrentMetal-FixAdd, 4, 3);
 				if (FixAdd > 0) {
 					EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
@@ -779,8 +782,8 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 		}
 		else if (weapon == GetPlayerWeaponSlot(attacker, 2)) {
 			int FixAdd = MMCvars[ConstructMetalAdd].IntValue;
-			if ( TankConstruct[team-2][index][3] < TankConstruct[team-2][index][7] ) {
-				TankConstruct[team-2][index][3] += RoundFloat(FixAdd*0.5);	// Takes 7 seconds with Jag to put in 200 metal
+			if ( TankConstruct[team-2][index][METAL] < TankConstruct[team-2][index][MAXMETAL] ) {
+				TankConstruct[team-2][index][METAL] += FixAdd >> 1;	// Takes 7 seconds with Jag to put in 200 metal
 				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			}
 			else EmitSoundToClient(attacker, "weapons/wrench_hit_build_fail.wav");
@@ -804,14 +807,14 @@ public Action OnConstructTouch(int item, int other)
 			else team = 2;
 		}
 		else team = 3;
-		
-		if (!BaseVehicle(other).bIsVehicle and TankConstruct[team-2][index][3] >= TankConstruct[team-2][index][7]) {
+
+		if (!BaseVehicle(other).bIsVehicle and TankConstruct[team-2][index][METAL] >= TankConstruct[team-2][index][MAXMETAL]) {
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
 			ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle! JUMP to Exit Vehicle");
 			if ( GetClientButtons(other) & IN_RELOAD ) {
+				TankConstruct[team-2][index][PLYRHP] = GetClientHealth(other);
 				BaseVehicle toucher = BaseVehicle(other);
-				TankConstruct[team-2][index][6] = GetClientHealth(other);
-				toucher.iType = TankConstruct[team-2][index][1];
+				toucher.iType = TankConstruct[team-2][index][VEHTYPE];
 				toucher.bIsVehicle = true;
 				toucher.ConvertToVehicle();
 				toucher.VehHelpPanel();
@@ -819,8 +822,8 @@ public Action OnConstructTouch(int item, int other)
 				float VehLoc[3]; VehLoc = Vec_GetEntPropVector(item, Prop_Data, "m_vecAbsOrigin");
 				TeleportEntity(other, VehLoc, NULL_VECTOR, NULL_VECTOR);
 				
-				CreateTimer( 0.1, RemoveEnt, TankConstruct[team-2][index][0] );
-				TankConstruct[team-2][index][0] = 0;
+				CreateTimer( 0.1, RemoveEnt, TankConstruct[team-2][index][ENTREF] );
+				TankConstruct[team-2][index][ENTREF] = 0;
 			}
 		}
 	}
@@ -830,13 +833,13 @@ public Action OnConstructTouch(int item, int other)
 public void SetConstructAttribs(const BaseVehicle veh, const int team, const int index)
 {
 	int Turret = GetEntPropEnt(veh.index, Prop_Send, "m_hActiveWeapon");
-	if (TankConstruct[team-2][index][4] > 0) {
-		if (TankConstruct[team-2][index][1] == PanzerIII)
-			SetWeaponAmmo(Turret, TankConstruct[team-2][index][4]);
-		else SetWeaponClip(Turret, TankConstruct[team-2][index][4]);
+	if (TankConstruct[team-2][index][AMMO] > 0) {
+		if (TankConstruct[team-2][index][VEHTYPE] == PanzerIII)
+			SetWeaponAmmo(Turret, TankConstruct[team-2][index][AMMO]);
+		else SetWeaponClip(Turret, TankConstruct[team-2][index][AMMO]);
 	}
-	if (TankConstruct[team-2][index][5] > 0)
-		veh.iHealth = TankConstruct[team-2][index][5];
+	if (TankConstruct[team-2][index][HEALTH] > 0)
+		veh.iHealth = TankConstruct[team-2][index][HEALTH];
 }
 
 public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int select)
@@ -867,6 +870,8 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 		float flEyePos[3], flAng[3];
 		GetClientEyePosition(client, flEyePos);
 		GetClientEyeAngles(client, flAng);
+		
+		//IsValidBuildSpot(client, const float flMins[3], const float flMaxs[3], float flBuildBuffer[3])
 
 		TR_TraceRayFilter( flEyePos, flAng, MASK_SOLID, RayType_Infinite, TraceFilterIgnorePlayers, client );
 
@@ -1093,10 +1098,10 @@ public void OnPreThink(int client)
 				else team = 3;
 			}
 			else team = 2;
-			
+
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
-			if (TankConstruct[team-2][index][3] < TankConstruct[team-2][index][7])
-				ShowHudText(client, -1, "Metal Progress for Vehicle: %i / %i\nVehicle Health: %i", TankConstruct[team-2][index][3], TankConstruct[team-2][index][7], GetEntProp(entity, Prop_Data, "m_iHealth"));
+			if (TankConstruct[team-2][index][METAL] < TankConstruct[team-2][index][MAXMETAL])
+				ShowHudText(client, -1, "Metal Progress for Vehicle: %i / %i\nVehicle Health: %i", TankConstruct[team-2][index][METAL], TankConstruct[team-2][index][MAXMETAL], GetEntProp(entity, Prop_Data, "m_iHealth"));
 			else ShowHudText(client, -1, "Vehicle is Ready to Board!");
 		}
 	}
@@ -1111,17 +1116,17 @@ public void OnPreThink(int client)
 			if (BringClientToSide(client, vec_origin)) {	// found safe place for player to be
 				int index = manager.SpawnTankConstruct(client, vec_origin, team, player.iType, false);
 				if (index != -1) {
-					TankConstruct[team-2][index][3] = 999999999;
+					TankConstruct[team-2][index][METAL] = 999999999;
 					int Turret = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-					TankConstruct[team-2][index][4] = (player.iType == PanzerIII) ? GetWeaponAmmo(Turret) : GetWeaponClip(Turret);
-					TankConstruct[team-2][index][5] = player.iHealth;
+					TankConstruct[team-2][index][AMMO] = (player.iType == PanzerIII) ? GetWeaponAmmo(Turret) : GetWeaponClip(Turret);
+					TankConstruct[team-2][index][HEALTH] = player.iHealth;
 					
 					// we got our info, let's get out of the vehicle.
 					player.bIsVehicle = false;
 					player.Reset();
 					TF2_RegeneratePlayer(client);
-					if (TankConstruct[team-2][index][6] > 0)
-						SetEntityHealth(client, TankConstruct[team-2][index][6]);
+					if (TankConstruct[team-2][index][PLYRHP] > 0)
+						SetEntityHealth(client, TankConstruct[team-2][index][PLYRHP]);
 				}
 			}
 			else CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't exit the vehicle in this area.");
@@ -1911,6 +1916,49 @@ public TFClassType GetRandomClass(const int team)	// 0, 1 return support garage 
 	}
 	return TFClass_Soldier;
 }
+stock float fmax(float a, float b)
+{
+	return (a > b) ? a : b ;
+}
+stock float fmin(float a, float b)
+{
+	return (a < b) ? a : b ;
+}
+
+stock bool IsValidBuildSpot(const int builder, const float flMins[3], const float flMaxs[3], float flBuildBuffer[3])
+{
+	if (builder <= 0)
+		return false;
+	
+	float vec_forward[3];
+	float vec_angles[3], vec_objangles[3];
+	GetClientEyeAngles(builder, vec_angles);
+	vec_objangles = vec_angles;
+	GetAngleVectors(vec_angles, vec_forward, NULL_VECTOR, NULL_VECTOR);
+	
+	float vec_objradius[2];
+	vec_objradius[0] = fmax( flMins[0], flMaxs[0] );
+	vec_objradius[1] = fmax( flMins[1], flMaxs[1] );
+	
+	float vec_playerRadius[2];
+	float vecPlayerMins[3], vecPlayerMaxs[3];
+	
+	GetClientMaxs(builder, vecPlayerMaxs);
+	GetClientMins(builder, vecPlayerMins);
+	vec_playerRadius[0] = fmax( vecPlayerMins[0], vecPlayerMaxs[0] );
+	vec_playerRadius[1] = fmax( vecPlayerMins[1], vecPlayerMaxs[1] );
+	
+	float fldist = GetVectorLength(vec_objradius) + GetVectorLength(vec_playerRadius) + 4;
+	
+	float vecBuildOrigin[3];
+	float vec_playerorigin[3];
+	GetClientAbsOrigin(builder, vec_playerorigin);
+	ScaleVector(vec_forward, fldist);
+	AddVectors(vec_playerorigin, vec_forward, vecBuildOrigin);
+	flBuildBuffer = vecBuildOrigin;
+	
+	return true;
+}
 stock bool CanBuildHere(float flPos[3], const float flMins[3], const float flMaxs[3])
 {
 	bool bSuccess;
@@ -1923,6 +1971,79 @@ stock bool CanBuildHere(float flPos[3], const float flMins[3], const float flMax
 		else flPos[2] += 1.0;
 	}
 	return bSuccess;
+/*
+//-----------------------------------------------------------------------------
+// Purpose: Cheap check to see if we are in any server-defined No-build areas.
+//-----------------------------------------------------------------------------
+bool CBaseObject::EstimateValidBuildPos( void )
+{
+	CTFPlayer *pPlayer = GetOwner();
+
+	if ( !pPlayer )
+		return false;
+
+	// Calculate build angles
+	Vector forward;
+	QAngle vecAngles = vec3_angle;
+	vecAngles.y = pPlayer->EyeAngles().y;
+
+	QAngle objAngles = vecAngles;
+
+	//SetAbsAngles( objAngles );
+	//SetLocalAngles( objAngles );
+	AngleVectors(vecAngles, &forward );
+
+	// Adjust build distance based upon object size
+	Vector2D vecObjectRadius;
+	vecObjectRadius.x = max( fabs( m_vecBuildMins.m_Value.x ), fabs( m_vecBuildMaxs.m_Value.x ) );
+	vecObjectRadius.y = max( fabs( m_vecBuildMins.m_Value.y ), fabs( m_vecBuildMaxs.m_Value.y ) );
+
+	Vector2D vecPlayerRadius;
+	Vector vecPlayerMins = pPlayer->WorldAlignMins();
+	Vector vecPlayerMaxs = pPlayer->WorldAlignMaxs();
+	vecPlayerRadius.x = max( fabs( vecPlayerMins.x ), fabs( vecPlayerMaxs.x ) );
+	vecPlayerRadius.y = max( fabs( vecPlayerMins.y ), fabs( vecPlayerMaxs.y ) );
+
+	float flDistance = vecObjectRadius.Length() + vecPlayerRadius.Length() + 4; // small safety buffer
+	Vector vecBuildOrigin = pPlayer->WorldSpaceCenter() + forward * flDistance;
+
+	//NDebugOverlay::Cross3D( vecBuildOrigin, 10, 255, 0, 0, false, 0.1 );
+
+	// Cannot build inside a nobuild brush
+	if ( PointInNoBuild( vecBuildOrigin, this ) )
+		return false;
+
+	if ( PointInRespawnRoom( NULL, vecBuildOrigin ) )
+		return false;
+
+	Vector vecBuildFarEdge = vecBuildOrigin + forward * ( flDistance + 8.0f );
+	if ( TestAgainstRespawnRoomVisualizer( pPlayer, vecBuildFarEdge ) )
+		return false;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBaseObject::TestAgainstRespawnRoomVisualizer( CTFPlayer *pPlayer, const Vector &vecEnd )
+{
+	// Setup the ray.
+	Ray_t ray;
+	ray.Init( pPlayer->WorldSpaceCenter(), vecEnd );
+
+	CBaseEntity *pEntity = NULL;
+	while ( ( pEntity = gEntList.FindEntityByClassnameWithin( pEntity, "func_respawnroomvisualizer", pPlayer->WorldSpaceCenter(), ray.m_Delta.Length() ) ) != NULL )
+	{
+		trace_t trace;
+		enginetrace->ClipRayToEntity( ray, MASK_ALL, pEntity, &trace );
+		if ( trace.fraction < 1.0f )
+			return true;
+	}
+
+	return false;
+}
+*/
 }
 stock int GetWeaponAmmo(const int weapon)
 {

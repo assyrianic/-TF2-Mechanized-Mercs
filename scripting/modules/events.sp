@@ -11,6 +11,8 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 		int client = player.index;
 		SetVariantString(""); AcceptEntityInput(client, "SetCustomModel");
 		SetClientOverlay(client, "0");
+		//SetVariantString("0");
+		//AcceptEntityInput(client, "SetForcedTauntCam");
 
 		if ( IsBlueBlocked(client) or IsRedBlocked(client) )
 			return Plugin_Continue;
