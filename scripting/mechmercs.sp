@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.2.2"
+#define PLUGIN_VERSION		"1.2.6"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -653,13 +653,13 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 			Menu tankers = new Menu( MenuHandler_GoTank );
 			tankers.AddItem("1", "Armored Car: Armed w/ Machinegun and 20mm Cannon, Can Capture and Self-Heal");
 			int vehkills = BaseVehicle(client).iVehicleKills;
-			if (vehkills >= 5)
-				tankers.AddItem("3", "Panzer II: Armed w/ Flamethrower and HE, Arcing Rockets.");
 			if (vehkills >= 10)
-				tankers.AddItem("0", "Panzer IV: Armed w/ Machinegun and Mouse2 Rockets.");
+				tankers.AddItem("3", "Panzer II: Armed w/ SMG and HE, Arcing Rockets.");
 			if (vehkills >= 15)
+				tankers.AddItem("0", "Panzer IV: Armed w/ Machinegun and Mouse2 Rockets.");
+			if (vehkills >= 25)
 				tankers.AddItem("5", "Marder II: Armed w/ 700 DMG Anti-Tank Rockets.");
-			if (vehkills >= 20)
+			if (vehkills >= 30)
 				tankers.AddItem("4", "King Tiger II: Armed w/ Machinegun and Mouse2 Nuclear Rockets.");
 			tankers.Display(client, MENU_TIME_FOREVER);
 		}
@@ -702,17 +702,69 @@ public int MenuHandler_MakeTankPowUp(Menu menu, MenuAction action, int client, i
 	char info1[16]; menu.GetItem(select, info1, sizeof(info1));
 	if (action == MenuAction_Select) {
 		//BaseVehicle player = BaseVehicle(client);
+		int construct = CreateEntityByName("prop_dynamic_override");
+		if ( construct <= 0 or !IsValidEdict(construct) )
+			return ;
+			
 		int vehicletype = StringToInt(info1);
 		int team = GetClientTeam(client);
+		
+		char tName[32]; tName[0] = '\0';
+		char szModelPath[PLATFORM_MAX_PATH];
 		
 		float flEyePos[3], flAng[3];
 		GetClientEyePosition(client, flEyePos);
 		GetClientEyeAngles(client, flAng);
 
-		TR_TraceRayFilter( flEyePos, flAng, MASK_SOLID, RayType_Infinite, TraceFilterIgnorePlayers, client );
+		int metal;
+		switch (vehicletype) {
+			case Tank: {
+				szModelPath = TankModel;
+				Format(tName, sizeof(tName), "mechmercs_construct_panzer4%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[PanzerMetal].IntValue;
+			}
+			case ArmoredCar: {
+				szModelPath = ArmCarModel;
+				Format(tName, sizeof(tName), "mechmercs_construct_armoredcar%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[ArmoredCarMetal].IntValue;
+			}
+			case Ambulance: {
+				szModelPath = AmbModel;
+				Format(tName, sizeof(tName), "mechmercs_construct_ambulance%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[AmbulanceMetal].IntValue;
+			}
+			case PanzerIII: {
+				szModelPath = LightTankModel;
+				Format(tName, sizeof(tName), "mechmercs_construct_lighttank%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[LitePanzerMetal].IntValue;
+			}
+			case KingPanzer: {
+				szModelPath = KingTankModel;
+				Format(tName, sizeof(tName), "mechmercs_construct_tiger%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[KingPanzerMetal].IntValue;
+			}
+			case Destroyer: {
+				szModelPath = DestroyerModel;
+				Format(tName, sizeof(tName), "mechmercs_construct_marder%i", GetRandomInt(0, 9999999));
+				metal = MMCvars[Marder3Metal].IntValue;
+			}
+		}
+		
+		DispatchKeyValue(construct, "targetname", tName);
+		SetEntProp( construct, Prop_Send, "m_iTeamNum", team );
+		char szskin[32]; Format(szskin, sizeof(szskin), "%d", team-2);
+		DispatchKeyValue(construct, "skin", szskin);
 
-		if ( TR_GetFraction() < 1.0 ) {
-			float flEndPos[3]; TR_GetEndPosition(flEndPos);
+		SetEntityModel(construct, szModelPath);
+		SetEntPropFloat(construct, Prop_Send, "m_flModelScale", 1.25);
+
+		float mins[3], maxs[3];
+		mins = Vec_GetEntPropVector(construct, Prop_Send, "m_vecMins");
+		maxs = Vec_GetEntPropVector(construct, Prop_Send, "m_vecMaxs");
+		
+		float flEndPos[3];
+		if (IsPlacementPosValid(client, mins, maxs, flEndPos)) {
+			//float flEndPos[3]; TR_GetEndPosition(flEndPos);
 			{
 				float spawnPos[3];
 				int iEnt = -1;
@@ -729,13 +781,50 @@ public int MenuHandler_MakeTankPowUp(Menu menu, MenuAction action, int client, i
 					}
 				}
 				if (TR_PointOutsideWorld(flEndPos)) {
-					CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build a Vehicle Mainframe outside the Playable Area!");
+					CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build a Vehicle outside the Playable Area!");
 					SpawnVehicleGarageMenu(client, -1);
 					return;
 				}
 			}
-			GetClientAbsAngles(client, flAng); flAng[1] += 90.0;
-			manager.SpawnTankConstruct(client, flEndPos, team, vehicletype, true);
+			DispatchSpawn(construct);
+			SetEntProp( construct, Prop_Send, "m_nSolidType", 6 );
+			TeleportEntity(construct, flEndPos, NULL_VECTOR, NULL_VECTOR);
+
+			int beamcolor[4] = {0, 255, 90, 255};
+
+			float vecMins[3], vecMaxs[3];
+			vecMins = Vec_AddVectors(flEndPos, mins); //AddVectors(flEndPos, mins, vecMins);
+			vecMaxs = Vec_AddVectors(flEndPos, maxs); //AddVectors(flEndPos, maxs, vecMaxs);
+
+			int laser = PrecacheModel("sprites/laser.vmt", true);
+			TE_SendBeamBoxToAll( vecMaxs, vecMins, laser, laser, 1, 1, 5.0, 8.0, 8.0, 5, 2.0, beamcolor, 0 );
+
+			SetEntProp(construct, Prop_Data, "m_takedamage", 2, 1);
+			SDKHook(construct, SDKHook_OnTakeDamage,	OnConstructTakeDamage);
+			SDKHook(construct, SDKHook_Touch,		OnConstructTouch);
+		
+			SetEntProp(construct, Prop_Data, "m_iHealth", MMCvars[VehicleConstructHP].IntValue);
+			if ( IsValidEntity(construct) and IsValidEdict(construct) ) {
+				int index = manager.GetNextEmptyPowerUpSlot(team);
+				if (index == -1) {
+					CPrintToChat(client, "{red}[Mechanized Mercs] {white}SpawnTankConstruct::Logic Error.");
+					CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
+					return;
+				}
+				TankConstruct[team-2][index][ENTREF] = EntIndexToEntRef(construct);
+				TankConstruct[team-2][index][VEHTYPE] = vehicletype;
+				TankConstruct[team-2][index][BUILDER] = GetClientUserId(client);
+				TankConstruct[team-2][index][METAL] = 0;
+				TankConstruct[team-2][index][AMMO] = 0;
+				TankConstruct[team-2][index][HEALTH] = 0;
+				//TankConstruct[team-2][index][PLYRHP] = 0;
+				TankConstruct[team-2][index][MAXMETAL] = metal;
+			}
+		}
+		else {
+			CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build that Vehicle there.");
+			CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
+			SpawnVehicleGarageMenu(client, -1);
 		}
 	}
 	else if (action == MenuAction_End)
@@ -844,19 +933,23 @@ public void SetConstructAttribs(const BaseVehicle veh, const int team, const int
 
 public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int select)
 {
-	if (!IsValidClient(client))
+	if (client <= 0)
 		return;
 	else if (BaseFighter(client).Class != TFClass_Engineer or IsClientObserver(client) or !IsPlayerAlive(client))
 		return;
-
-	else if (GetEntProp(client, Prop_Data, "m_iAmmo", 4, 3) < 200) {
-		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You need 200 Metal to build a Mainframe.");
-		SpawnVehicleGarageMenu(client, -1);
-		return;
-	}
 	char info1[16]; menu.GetItem(select, info1, sizeof(info1));
 	if (action == MenuAction_Select) {
+		if (GetEntProp(client, Prop_Data, "m_iAmmo", 4, 3) < 200) {
+			CPrintToChat(client, "{red}[Mechanized Mercs] {white}You need 200 Metal to build a Mainframe.");
+			SpawnVehicleGarageMenu(client, -1);
+			return;
+		}
 		//BaseVehicle player = BaseVehicle(client);
+		if (GetEntProp(client, Prop_Data, "m_iAmmo", 4, 3) < 200) {
+			CPrintToChat(client, "{red}[Mechanized Mercs] {white}You need 200 Metal to build a Mainframe.");
+			SpawnVehicleGarageMenu(client, -1);
+			return;
+		}
 		int garageflag = StringToInt(info1);
 		int team = GetClientTeam(client);
 		int offset = FlagtoOffset(garageflag);	// in gamemodemanager.sp
@@ -870,15 +963,52 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 		float flEyePos[3], flAng[3];
 		GetClientEyePosition(client, flEyePos);
 		GetClientEyeAngles(client, flAng);
-		
-		//IsValidBuildSpot(client, const float flMins[3], const float flMaxs[3], float flBuildBuffer[3])
-
+/*
 		TR_TraceRayFilter( flEyePos, flAng, MASK_SOLID, RayType_Infinite, TraceFilterIgnorePlayers, client );
 
 		if ( TR_GetFraction() < 1.0 ) {
 			float flEndPos[3]; TR_GetEndPosition(flEndPos);
-			{
-				float spawnPos[3];
+*/
+		GetClientAbsAngles(client, flAng); //flAng[1] += 90.0;
+
+		int pStruct = CreateEntityByName("prop_dynamic_override");
+		if ( pStruct <= 0 or !IsValidEdict(pStruct) )
+			return;
+		
+		char tName[32]; tName[0] = '\0';
+		
+		char szModelPath[PLATFORM_MAX_PATH];
+		switch (garageflag) {
+			case SUPPORTBUILT: {
+				szModelPath = "models/structures/combine/barracks.mdl";
+				Format(tName, sizeof(tName), "mechmercs_garage_support%i", GetRandomInt(0, 9999999));
+			}
+			case OFFENSIVEBUILT: {
+				szModelPath = "models/structures/combine/armory.mdl";
+				Format(tName, sizeof(tName), "mechmercs_garage_offense%i", GetRandomInt(0, 9999999));
+			}
+			case HEAVYBUILT: {
+				szModelPath = "models/structures/combine/synthfac.mdl";
+				Format(tName, sizeof(tName), "mechmercs_garage_heavy%i", GetRandomInt(0, 9999999));
+			}
+		}
+		DispatchKeyValue(pStruct, "targetname", tName);
+		SetEntProp( pStruct, Prop_Send, "m_iTeamNum", team );
+		//SetEntPropEnt( pStruct, Prop_Send, "m_hOwnerEntity", client );
+
+		PrecacheModel(szModelPath, true);
+		SetEntityModel(pStruct, szModelPath);
+		//SetEntPropFloat(pStruct, Prop_Send, "m_flModelScale", 0.5);
+
+		float mins[3], maxs[3];
+		mins = Vec_GetEntPropVector(pStruct, Prop_Send, "m_vecMins");
+		maxs = Vec_GetEntPropVector(pStruct, Prop_Send, "m_vecMaxs");
+
+		//if ( CanBuildHere(flEndPos, mins, maxs) ) {
+		float flEndPos[3];
+		if (IsPlacementPosValid(client, mins, maxs, flEndPos)) {
+			{	// check to see if in illegal areas.
+				/*float spawnPos[3];
 				int iEnt = -1;
 				while ( (iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1 )
 				{
@@ -891,128 +1021,90 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 						SpawnVehicleGarageMenu(client, -1);
 						return;
 					}
-				}
+				}*/
 				if (TR_PointOutsideWorld(flEndPos)) {
 					CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build a Vehicle Mainframe outside the Playable Area!");
 					SpawnVehicleGarageMenu(client, -1);
 					return;
 				}
 			}
-			GetClientAbsAngles(client, flAng); //flAng[1] += 90.0;
+			DispatchSpawn(pStruct);
+			SetEntProp( pStruct, Prop_Send, "m_nSolidType", 6 );
+			GetClientAbsAngles(client, flAng);	// set the building straight up
+			TeleportEntity(pStruct, flEndPos, flAng, NULL_VECTOR);
 
-			int pStruct = CreateEntityByName("prop_dynamic_override");
-			if ( pStruct <= 0 or !IsValidEdict(pStruct) )
-				return;
+			int beamcolor[4] = {0, 255, 90, 255};
+
+			float vecMins[3], vecMaxs[3];
+
+			vecMins = Vec_AddVectors(flEndPos, mins); //AddVectors(flEndPos, mins, vecMins);
+			vecMaxs = Vec_AddVectors(flEndPos, maxs); //AddVectors(flEndPos, maxs, vecMaxs);
+
+			int laser = PrecacheModel("sprites/laser.vmt", true);
+			TE_SendBeamBoxToAll( vecMaxs, vecMins, laser, laser, 1, 1, 5.0, 8.0, 8.0, 5, 2.0, beamcolor, 0 );
+
+			SetEntProp(pStruct, Prop_Data, "m_takedamage", 2, 1);
+			SDKHook(pStruct, SDKHook_OnTakeDamage, OnGarageTakeDamage);
+			SDKHook(pStruct, SDKHook_ShouldCollide, OnGarageCollide);
 			
-			char tName[32]; tName[0] = '\0';
+			int iGlow = CreateEntityByName("tf_taunt_prop");
+			if (iGlow != -1) {
+				GarageGlowRefs[team-2][offset] = EntIndexToEntRef(iGlow);
+				SetEntityModel(iGlow, szModelPath);
+				SetEntProp( iGlow, Prop_Send, "m_iTeamNum", team );
+
+				DispatchSpawn(iGlow);
+				ActivateEntity(iGlow);
+				SetEntityRenderMode(iGlow, RENDER_TRANSCOLOR);
+				SetEntityRenderColor(iGlow, 0, 0, 0, 0);
+				SetEntProp(iGlow, Prop_Send, "m_bGlowEnabled", 1);
+				float flModelScale = GetEntPropFloat(pStruct, Prop_Send, "m_flModelScale");
+				SetEntPropFloat(iGlow, Prop_Send, "m_flModelScale", flModelScale);
+
+				int iFlags = GetEntProp(iGlow, Prop_Send, "m_fEffects");
+				SetEntProp(iGlow, Prop_Send, "m_fEffects", iFlags|(1 << 0));
+
+				SetVariantString("!activator");
+				AcceptEntityInput(iGlow, "SetParent", pStruct);
+
+				SDKHook(iGlow, SDKHook_SetTransmit, OnEffectTransmit);
+			}
+
+			SetEntProp(pStruct, Prop_Data, "m_iHealth", 500);
 			
-			char szModelPath[PLATFORM_MAX_PATH];
-			switch (garageflag) {
-				case SUPPORTBUILT: {
-					szModelPath = "models/structures/combine/barracks.mdl";
-					Format(tName, sizeof(tName), "mechmercs_garage_support%i", GetRandomInt(0, 9999999));
-				}
-				case OFFENSIVEBUILT: {
-					szModelPath = "models/structures/combine/armory.mdl";
-					Format(tName, sizeof(tName), "mechmercs_garage_offense%i", GetRandomInt(0, 9999999));
-				}
-				case HEAVYBUILT: {
-					szModelPath = "models/structures/combine/synthfac.mdl";
-					Format(tName, sizeof(tName), "mechmercs_garage_heavy%i", GetRandomInt(0, 9999999));
-				}
+			SetEntityRenderMode(pStruct, RENDER_TRANSCOLOR);
+			switch (team) {
+				case 2:	SetEntityRenderColor(pStruct, 255, 30, 30, 255);	// RED
+				case 3:	SetEntityRenderColor(pStruct, 30, 150, 255, 255);	// BLU
 			}
-			DispatchKeyValue(pStruct, "targetname", tName);
-			SetEntProp( pStruct, Prop_Send, "m_iTeamNum", team );
-			//SetEntPropEnt( pStruct, Prop_Send, "m_hOwnerEntity", client );
 
-			PrecacheModel(szModelPath, true);
-			SetEntityModel(pStruct, szModelPath);
-			//SetEntPropFloat(pStruct, Prop_Send, "m_flModelScale", 0.5);
-
-			float mins[3], maxs[3];
-			mins = Vec_GetEntPropVector(pStruct, Prop_Send, "m_vecMins");
-			maxs = Vec_GetEntPropVector(pStruct, Prop_Send, "m_vecMaxs");
-
-			if ( CanBuildHere(flEndPos, mins, maxs) ) {
-				DispatchSpawn(pStruct);
-				SetEntProp( pStruct, Prop_Send, "m_nSolidType", 6 );
-				TeleportEntity(pStruct, flEndPos, flAng, NULL_VECTOR);
-
-				int beamcolor[4] = {0, 255, 90, 255};
-
-				float vecMins[3], vecMaxs[3];
-				mins = Vec_GetEntPropVector(pStruct, Prop_Send, "m_vecMins");
-				maxs = Vec_GetEntPropVector(pStruct, Prop_Send, "m_vecMaxs");
-
-				vecMins = Vec_AddVectors(flEndPos, mins); //AddVectors(flEndPos, mins, vecMins);
-				vecMaxs = Vec_AddVectors(flEndPos, maxs); //AddVectors(flEndPos, maxs, vecMaxs);
-
-				int laser = PrecacheModel("sprites/laser.vmt", true);
-				TE_SendBeamBoxToAll( vecMaxs, vecMins, laser, laser, 1, 1, 5.0, 8.0, 8.0, 5, 2.0, beamcolor, 0 );
-
-				SetEntProp(pStruct, Prop_Data, "m_takedamage", 2, 1);
-				SDKHook(pStruct, SDKHook_OnTakeDamage, OnGarageTakeDamage);
-				SDKHook(pStruct, SDKHook_ShouldCollide, OnGarageCollide);
-				
-				int iGlow = CreateEntityByName("tf_taunt_prop");
-				if (iGlow != -1) {
-					GarageGlowRefs[team-2][offset] = EntIndexToEntRef(iGlow);
-					SetEntityModel(iGlow, szModelPath);
-					SetEntProp( iGlow, Prop_Send, "m_iTeamNum", team );
-
-					DispatchSpawn(iGlow);
-					ActivateEntity(iGlow);
-					SetEntityRenderMode(iGlow, RENDER_TRANSCOLOR);
-					SetEntityRenderColor(iGlow, 0, 0, 0, 0);
-					SetEntProp(iGlow, Prop_Send, "m_bGlowEnabled", 1);
-					float flModelScale = GetEntPropFloat(pStruct, Prop_Send, "m_flModelScale");
-					SetEntPropFloat(iGlow, Prop_Send, "m_flModelScale", flModelScale);
-	
-					int iFlags = GetEntProp(iGlow, Prop_Send, "m_fEffects");
-					SetEntProp(iGlow, Prop_Send, "m_fEffects", iFlags|(1 << 0));
-	
-					SetVariantString("!activator");
-					AcceptEntityInput(iGlow, "SetParent", pStruct);
-	
-					SDKHook(iGlow, SDKHook_SetTransmit, OnEffectTransmit);
+			if ( IsValidEntity(pStruct) and IsValidEdict(pStruct) ) {
+				int baseid = EntIndexToEntRef(pStruct);
+				switch ( garageflag ) {
+					case SUPPORTBUILT:	GarageBuildTime[team-2][offset] = MMCvars[SupportBuildTime].FloatValue;
+					case OFFENSIVEBUILT:	GarageBuildTime[team-2][offset] = MMCvars[OffensiveBuildTime].FloatValue;
+					case HEAVYBUILT:	GarageBuildTime[team-2][offset] = MMCvars[HeavySupportBuildTime].FloatValue;
 				}
+				GarageRefs[team-2][offset] = baseid;
+				for (int i=MaxClients ; i ; --i) {
+					if (!IsValidClient(i))
+						continue;
+					else if (GetClientTeam(i) != team)
+						continue;
 
-				SetEntProp(pStruct, Prop_Data, "m_iHealth", 500);
-				
-				SetEntityRenderMode(pStruct, RENDER_TRANSCOLOR);
-				switch (team) {
-					case 2:	SetEntityRenderColor(pStruct, 255, 30, 30, 255);	// RED
-					case 3:	SetEntityRenderColor(pStruct, 30, 150, 255, 255);	// BLU
-				}
-
-				if ( IsValidEntity(pStruct) and IsValidEdict(pStruct) ) {
-					int baseid = EntIndexToEntRef(pStruct);
-					switch ( garageflag ) {
-						case SUPPORTBUILT:	GarageBuildTime[team-2][offset] = MMCvars[SupportBuildTime].FloatValue;
-						case OFFENSIVEBUILT:	GarageBuildTime[team-2][offset] = MMCvars[OffensiveBuildTime].FloatValue;
-						case HEAVYBUILT:	GarageBuildTime[team-2][offset] = MMCvars[HeavySupportBuildTime].FloatValue;
+					switch (garageflag) {
+						case SUPPORTBUILT:	CPrintToChat(i, "{red}[Mechanized Mercs] {white}Support Mainframe Built, Will activate in 1 Minute.");
+						case OFFENSIVEBUILT:	CPrintToChat(i, "{red}[Mechanized Mercs] {white}Offense Mainframe Built, Will activate in 2 Minutes.");
+						case HEAVYBUILT:	CPrintToChat(i, "{red}[Mechanized Mercs] {white}Heavy Support Mainframe Built, Will activate in 4 Minutes");
 					}
-					GarageRefs[team-2][offset] = baseid;
-					for (int i=MaxClients ; i ; --i) {
-						if (!IsValidClient(i))
-							continue;
-						else if (GetClientTeam(i) != team)
-							continue;
-
-						switch (garageflag) {
-							case SUPPORTBUILT:	CPrintToChat(i, "{red}[Mechanized Mercs] {white}Support Mainframe Built, Will activate in 1 Minute.");
-							case OFFENSIVEBUILT:	CPrintToChat(i, "{red}[Mechanized Mercs] {white}Offense Mainframe Built, Will activate in 2 Minutes.");
-							case HEAVYBUILT:	CPrintToChat(i, "{red}[Mechanized Mercs] {white}Heavy Support Mainframe Built, Will activate in 4 Minutes");
-						}
-					}
-					SetEntProp(client, Prop_Data, "m_iAmmo", 0, 4, 3);
 				}
+				SetEntProp(client, Prop_Data, "m_iAmmo", 0, 4, 3);
 			}
-			else {
-				CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build that Vehicle Mainframe there.");
-				CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(pStruct) );
-				SpawnVehicleGarageMenu(client, -1);
-			}
+		}
+		else {
+			CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build that Vehicle Mainframe there.");
+			CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(pStruct) );
+			SpawnVehicleGarageMenu(client, -1);
 		}
 	}
 	else if (action == MenuAction_End)
@@ -1108,7 +1200,7 @@ public void OnPreThink(int client)
 
 	BaseVehicle player = BaseVehicle(client);
 	if (player.bIsVehicle) {
-		if ((GetClientButtons(client) & IN_JUMP) and GamePlayMode.IntValue == Powerup ) {
+		if ((GetClientButtons(client) & IN_JUMP) and (GetEntityFlags(client) & FL_ONGROUND) and GamePlayMode.IntValue == Powerup ) {
 			// record vehicle info so we can recreate our vehicle construct as ready to use
 			int team = GetClientTeam(client);
 			float vec_origin[3]; GetClientAbsOrigin(client, vec_origin);
@@ -1920,19 +2012,27 @@ stock float fmax(float a, float b)
 {
 	return (a > b) ? a : b ;
 }
-stock float fmin(float a, float b)
+
+stock float Vec2DLength(float v[2])
 {
-	return (a < b) ? a : b ;
+	float length = 0.0;
+	for (int i=0 ; i<2 ; ++i)
+		length += v[i]*v[i];
+	
+	length = SquareRoot (length);
+	return length;
 }
 
-stock bool IsValidBuildSpot(const int builder, const float flMins[3], const float flMaxs[3], float flBuildBuffer[3])
+stock bool CalcBuildPos(const int builder, const float flMins[3], const float flMaxs[3], float flBuildBuffer[3])
 {
 	if (builder <= 0)
-		return false;
+		return false ;
 	
 	float vec_forward[3];
 	float vec_angles[3], vec_objangles[3];
 	GetClientEyeAngles(builder, vec_angles);
+	// we only need the y-angle
+	vec_angles[0] = 0.0, vec_angles[2] = 0.0;
 	vec_objangles = vec_angles;
 	GetAngleVectors(vec_angles, vec_forward, NULL_VECTOR, NULL_VECTOR);
 	
@@ -1948,33 +2048,141 @@ stock bool IsValidBuildSpot(const int builder, const float flMins[3], const floa
 	vec_playerRadius[0] = fmax( vecPlayerMins[0], vecPlayerMaxs[0] );
 	vec_playerRadius[1] = fmax( vecPlayerMins[1], vecPlayerMaxs[1] );
 	
-	float fldist = GetVectorLength(vec_objradius) + GetVectorLength(vec_playerRadius) + 4;
+	float fldist = Vec2DLength(vec_objradius) + Vec2DLength(vec_playerRadius) + 4;
 	
 	float vecBuildOrigin[3];
 	float vec_playerorigin[3];
 	GetClientAbsOrigin(builder, vec_playerorigin);
+	
 	ScaleVector(vec_forward, fldist);
 	AddVectors(vec_playerorigin, vec_forward, vecBuildOrigin);
+	
 	flBuildBuffer = vecBuildOrigin;
 	
+	float vBuildDims[3];
+	SubtractVectors(flMaxs, flMins, vBuildDims);
+	
+	float vHalfBuildDims[3];
+	vHalfBuildDims = vBuildDims;
+	ScaleVector(vHalfBuildDims, 0.5);
+	
+	
+	//Vector vErrorOrigin = vecBuildOrigin - (m_vecBuildMaxs - m_vecBuildMins) * 0.5f - m_vecBuildMins;
+	float vErrorOrigin[3];
+	{
+		SubtractVectors(vecBuildOrigin, vHalfBuildDims, vErrorOrigin);
+		SubtractVectors(vErrorOrigin, flMins, vErrorOrigin);
+	}
+	
+	float vHalfPlayerDims[3];
+	{
+		float mins[3]; GetClientMins(builder, mins);
+		float maxs[3]; GetClientMaxs(builder, maxs);
+		SubtractVectors(maxs, mins, vHalfPlayerDims);
+		ScaleVector(vHalfPlayerDims, 0.5);
+	}
+	float flBoxTopZ = vec_playerorigin[2] + vHalfPlayerDims[2] + vBuildDims[2];
+	float flBoxBottomZ = vec_playerorigin[2] - vHalfPlayerDims[2] - vBuildDims[2];
+	
+	float bottomZ = 0.0;
+	int nIterations = 4;
+	float topZ = flBoxTopZ;
+	float topZInc = (flBoxBottomZ - flBoxTopZ) / (nIterations-1);
+	int iIteration;
+	
+	float checkOriginTop[3];
+	checkOriginTop = vecBuildOrigin;
+	float checkOriginBottom[3];
+	checkOriginBottom = vecBuildOrigin;
+	
+	float endpos[3];
+	for (iIteration=0 ; iIteration<nIterations ; ++iIteration) {
+		checkOriginTop[2] = topZ;
+		checkOriginBottom[2] = flBoxBottomZ;
+		
+		TR_TraceHull( checkOriginTop, checkOriginBottom, flMins, flMaxs, MASK_SOLID );
+		TR_GetEndPosition(endpos);
+		bottomZ = endpos[2];
+		
+		if (TR_GetFraction() == 1.0) {	// no ground, can't build here!
+			flBuildBuffer = vErrorOrigin;
+			return false;
+		}
+		else if (TR_PointOutsideWorld(checkOriginTop) or TR_PointOutsideWorld(checkOriginBottom)) {
+			flBuildBuffer = vErrorOrigin;
+			return false;
+		}
+		
+		// if we found enough space to fit our object, place here
+		if ( topZ - bottomZ > vBuildDims[2]
+			and !(TR_GetPointContents(checkOriginTop) & MASK_SOLID)
+			and !(TR_GetPointContents(checkOriginBottom) & MASK_SOLID) )
+			break;
+		
+		topZ += topZInc;
+	}
+	if ( iIteration == nIterations ) {
+		flBuildBuffer = vErrorOrigin;
+		return false;
+	}
+		
+	// Now see if the range we've got leaves us room for our box.
+	if ( topZ-bottomZ < vBuildDims[2] ) {
+		flBuildBuffer = vErrorOrigin;
+		return false;
+	}
+	
+	// Ok, now we know the Z range where this box can fit.
+	float vBottomLeft[3];
+	SubtractVectors(vecBuildOrigin, vHalfBuildDims, vBottomLeft);
+	vBottomLeft[2] = bottomZ;
+	
+	SubtractVectors(vBottomLeft, flMins, vecBuildOrigin);
+	flBuildBuffer = vecBuildOrigin;
+	return true;
+	
+	/*bool bSuccess;
+	for ( int i=301 ; i ; --i ) {
+		TR_TraceHull( vecBuildOrigin, vecBuildOrigin, flMins, flMaxs, MASK_SOLID );
+		if (bSuccess)
+			break;
+		
+		if (TR_GetFraction() == 0.99 or TR_GetFraction() == 0.98)
+			bSuccess = true; //PrintToConsole(builder, "tr.fraction");
+		else if (TR_DidHit())
+			vecBuildOrigin[2] += 0.1;
+	}
+	flBuildBuffer = vecBuildOrigin;
+	PrintToConsole(builder, "%i", (bSuccess == true));
+	return bSuccess;*/
+}
+
+
+stock bool IsPlacementPosValid(const int builder, const float flMins[3], const float flMaxs[3], float flBuildBuffer[3])
+{
+	bool bValid = CalcBuildPos(builder, flMins, flMaxs, flBuildBuffer);
+
+	if ( !bValid )
+		return false;
+	
+	if ( builder <= 0 )
+		return false;
+	
+	// Make sure we can see the final position
+	float EyePos[3]; GetClientEyePosition(builder, EyePos);
+	float BuildOriginSum[3];
+	{
+		float tempvec[3];
+		tempvec[0] = 0.0, tempvec[1] = 0.0, tempvec[2] = flMaxs[2] * 0.5;
+		AddVectors(flBuildBuffer, tempvec, BuildOriginSum);
+	}
+	TR_TraceRayFilter( EyePos, BuildOriginSum, MASK_PLAYERSOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitSelf, builder );
+	if ( TR_GetFraction() < 1.0 )
+		return false;
+
 	return true;
 }
-stock bool CanBuildHere(float flPos[3], const float flMins[3], const float flMaxs[3])
-{
-	bool bSuccess;
-	for ( int i=0 ; i<60 ; ++i ) {
-		TR_TraceHull( flPos, flPos, flMins, flMaxs, MASK_SOLID );
-		if ( TR_GetFraction() > 0.98 ) {
-			bSuccess = true;
-			break;
-		}
-		else flPos[2] += 1.0;
-	}
-	return bSuccess;
 /*
-//-----------------------------------------------------------------------------
-// Purpose: Cheap check to see if we are in any server-defined No-build areas.
-//-----------------------------------------------------------------------------
 bool CBaseObject::EstimateValidBuildPos( void )
 {
 	CTFPlayer *pPlayer = GetOwner();
@@ -2007,8 +2215,6 @@ bool CBaseObject::EstimateValidBuildPos( void )
 	float flDistance = vecObjectRadius.Length() + vecPlayerRadius.Length() + 4; // small safety buffer
 	Vector vecBuildOrigin = pPlayer->WorldSpaceCenter() + forward * flDistance;
 
-	//NDebugOverlay::Cross3D( vecBuildOrigin, 10, 255, 0, 0, false, 0.1 );
-
 	// Cannot build inside a nobuild brush
 	if ( PointInNoBuild( vecBuildOrigin, this ) )
 		return false;
@@ -2022,7 +2228,61 @@ bool CBaseObject::EstimateValidBuildPos( void )
 
 	return true;
 }
+*/
+stock bool CanBuildHere(float flPos[3], const float flMins[3], const float flMaxs[3])
+{
+	bool bSuccess;
+	for ( int i=0 ; i<60 ; ++i ) {
+		TR_TraceHull( flPos, flPos, flMins, flMaxs, MASK_SOLID );
+		if ( TR_GetFraction() > 0.98 ) {
+			bSuccess = true;
+			break;
+		}
+		else flPos[2] += 1.0;
+	}
+	return bSuccess;
+/*
+//-----------------------------------------------------------------------------
+// Purpose: Check that the selected position is buildable
+//-----------------------------------------------------------------------------
+bool CBaseObject::IsPlacementPosValid( void )
+{
+	bool bValid = CalculatePlacementPos();
 
+	if ( !bValid )
+	{
+		return false;
+	}
+
+	CTFPlayer *pPlayer = GetOwner();
+
+	if ( !pPlayer )
+	{
+		return false;
+	}
+
+#ifndef CLIENT_DLL
+	if ( !EstimateValidBuildPos() )
+		return false;
+#endif
+
+	// Verify that the entire object can fit here
+	// Important! here we want to collide with players and other buildings, but not dropped weapons
+	trace_t tr;
+	UTIL_TraceEntity( this, m_vecBuildOrigin, m_vecBuildOrigin, MASK_SOLID, NULL, COLLISION_GROUP_PLAYER, &tr );
+
+	if ( tr.fraction < 1.0f )
+		return false;
+
+	// Make sure we can see the final position
+	UTIL_TraceLine( pPlayer->EyePosition(), m_vecBuildOrigin + Vector(0,0,m_vecBuildMaxs[2] * 0.5), MASK_PLAYERSOLID_BRUSHONLY, pPlayer, COLLISION_GROUP_NONE, &tr );
+	if ( tr.fraction < 1.0 )
+	{
+		return false;
+	}
+
+	return true;
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2440,3 +2700,158 @@ stock bool BringClientToSide(const int client, const float flOrigin[3])
 	}
 	return false;
 }
+
+/*
+//-----------------------------------------------------------------------------
+// Purpose: Find a place in the world where we should try to build this object
+//-----------------------------------------------------------------------------
+bool CBaseObject::CalculatePlacementPos( void )
+{
+	CTFPlayer *pPlayer = GetOwner();
+
+	if ( !pPlayer )
+		return false;
+
+	// Calculate build angles
+	Vector forward;
+	QAngle vecAngles = vec3_angle;
+	vecAngles.y = pPlayer->EyeAngles().y;
+
+	QAngle objAngles = vecAngles;
+
+	SetAbsAngles( objAngles );
+
+	UpdateDesiredBuildRotation( gpGlobals->frametime );
+
+	objAngles.y = objAngles.y + m_flCurrentBuildRotation;
+
+	SetLocalAngles( objAngles );
+	AngleVectors(vecAngles, &forward );
+
+	// Adjust build distance based upon object size
+	Vector2D vecObjectRadius;
+	vecObjectRadius.x = max( fabs( m_vecBuildMins.m_Value.x ), fabs( m_vecBuildMaxs.m_Value.x ) );
+	vecObjectRadius.y = max( fabs( m_vecBuildMins.m_Value.y ), fabs( m_vecBuildMaxs.m_Value.y ) );
+
+	Vector2D vecPlayerRadius;
+	Vector vecPlayerMins = pPlayer->WorldAlignMins();
+	Vector vecPlayerMaxs = pPlayer->WorldAlignMaxs();
+	vecPlayerRadius.x = max( fabs( vecPlayerMins.x ), fabs( vecPlayerMaxs.x ) );
+	vecPlayerRadius.y = max( fabs( vecPlayerMins.y ), fabs( vecPlayerMaxs.y ) );
+
+	float flDistance = vecObjectRadius.Length() + vecPlayerRadius.Length() + 4; // small safety buffer
+	Vector vecBuildOrigin = pPlayer->WorldSpaceCenter() + forward * flDistance;
+
+	m_vecBuildOrigin = vecBuildOrigin;
+	Vector vErrorOrigin = vecBuildOrigin - (m_vecBuildMaxs - m_vecBuildMins) * 0.5f - m_vecBuildMins;
+
+	Vector vBuildDims = m_vecBuildMaxs - m_vecBuildMins;
+	Vector vHalfBuildDims = vBuildDims * 0.5;
+	Vector vHalfBuildDimsXY( vHalfBuildDims.x, vHalfBuildDims.y, 0 );
+
+	// Here, we start at the highest Z we'll allow for the top of the object. Then
+	// we sweep an XY cross section downwards until it hits the ground.
+	//
+	// The rule is that the top of to box can't go lower than the player's feet, and the bottom of the
+	// box can't go higher than the player's head.
+	//
+	// To simplify things in here, we treat the box as though it's symmetrical about all axes
+	// (so mins = -maxs), then reoffset the box at the very end.
+	Vector vHalfPlayerDims = (pPlayer->WorldAlignMaxs() - pPlayer->WorldAlignMins()) * 0.5f;
+	float flBoxTopZ = pPlayer->WorldSpaceCenter().z + vHalfPlayerDims.z + vBuildDims.z;
+	float flBoxBottomZ = pPlayer->WorldSpaceCenter().z - vHalfPlayerDims.z - vBuildDims.z;
+
+	// First, find the ground (ie: where the bottom of the box goes).
+	trace_t tr;
+	float bottomZ = 0;
+	int nIterations = 8;
+	float topZ = flBoxTopZ;
+	float topZInc = (flBoxBottomZ - flBoxTopZ) / (nIterations-1);
+	int iIteration;
+	for ( iIteration = 0; iIteration < nIterations; iIteration++ )
+	{
+		UTIL_TraceHull( 
+			Vector( m_vecBuildOrigin.x, m_vecBuildOrigin.y, topZ ), 
+			Vector( m_vecBuildOrigin.x, m_vecBuildOrigin.y, flBoxBottomZ ), 
+			-vHalfBuildDimsXY, vHalfBuildDimsXY, MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
+		bottomZ = tr.endpos.z;
+
+		// If there is no ground, then we can't place here.
+		if ( tr.fraction == 1 )
+		{
+			m_vecBuildOrigin = vErrorOrigin;
+			return false;
+		}
+
+		// if we found enough space to fit our object, place here
+		if ( topZ - bottomZ > vBuildDims.z && !tr.startsolid )
+		{
+			break;
+		}
+
+		topZ += topZInc;
+	}
+
+	if ( iIteration == nIterations )
+	{
+		m_vecBuildOrigin = vErrorOrigin;
+		return false;
+	}
+
+	// Now see if the range we've got leaves us room for our box.
+	if ( topZ - bottomZ < vBuildDims.z )
+	{
+		m_vecBuildOrigin = vErrorOrigin;
+		return false;
+	}
+
+	// Verify that it's not on too much of a slope by seeing how far the corners are from the ground.
+	Vector vBottomCenter( m_vecBuildOrigin.x, m_vecBuildOrigin.y, bottomZ );
+	if ( !VerifyCorner( vBottomCenter, -vHalfBuildDims.x, -vHalfBuildDims.y ) ||
+		!VerifyCorner( vBottomCenter, +vHalfBuildDims.x, +vHalfBuildDims.y ) ||
+		!VerifyCorner( vBottomCenter, +vHalfBuildDims.x, -vHalfBuildDims.y ) ||
+		!VerifyCorner( vBottomCenter, -vHalfBuildDims.x, +vHalfBuildDims.y ) )
+	{
+		m_vecBuildOrigin = vErrorOrigin;
+		return false;
+	}
+
+	// Ok, now we know the Z range where this box can fit.
+	Vector vBottomLeft = m_vecBuildOrigin - vHalfBuildDims;
+	vBottomLeft.z = bottomZ;
+	m_vecBuildOrigin = vBottomLeft - m_vecBuildMins;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Checks a position to make sure a corner of a building can live there
+//-----------------------------------------------------------------------------
+bool CBaseObject::VerifyCorner( const Vector &vBottomCenter, float xOffset, float yOffset )
+{
+	// Start slightly above the surface
+	Vector vStart( vBottomCenter.x + xOffset, vBottomCenter.y + yOffset, vBottomCenter.z + 0.1 );
+
+	trace_t tr;
+	UTIL_TraceLine( 
+		vStart, 
+		vStart - Vector( 0, 0, TF_OBJ_GROUND_CLEARANCE ), 
+		MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_PLAYER_MOVEMENT, &tr );
+
+	// Cannot build on very steep slopes ( > 45 degrees )
+	if ( tr.fraction < 1.0f )
+	{
+		Vector vecUp(0,0,1);
+		tr.plane.normal.NormalizeInPlace();
+		float flDot = DotProduct( tr.plane.normal, vecUp );
+
+		if ( flDot < 0.65 )
+		{
+			// Too steep
+			return false;
+		}
+	}
+
+	return !tr.startsolid && tr.fraction < 1;
+}
+*/

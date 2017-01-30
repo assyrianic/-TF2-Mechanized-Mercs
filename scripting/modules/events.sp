@@ -142,33 +142,35 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 				if (player.iVehicleKills < 5)
 					player.iType = ArmoredCar;
 				switch ( player.Class ) {
-					case TFClass_Engineer, TFClass_Spy, TFClass_Soldier, TFClass_Medic, TFClass_Scout: {
-						if (player.iVehicleKills >= 5) {
-							int VehType = player.iVehicleKills/5;
-							switch (VehType) {	// make the player become the strongest available tank
-								case 1: player.iType = PanzerIII;
-								case 2: player.iType = Tank;
-								case 3: player.iType = Destroyer;
-								case 4: player.iType = KingPanzer;
-							}
+					case TFClass_Engineer, TFClass_Spy, TFClass_Soldier, TFClass_Medic: {
+						if (player.iVehicleKills >= 10) {
+							if (player.iVehicleKills >= 30)
+								player.iType = KingPanzer;
+							else if (player.iVehicleKills >= 25)
+								player.iType = Destroyer;
+							else if (player.iVehicleKills >= 15)
+								player.iType = Tank;
+							else if (player.iVehicleKills >= 10)
+								player.iType = PanzerIII;
 						}
 					}
 					case TFClass_Heavy: {
-						if (player.iVehicleKills >= 20)
+						if (player.iVehicleKills >= 30)
 							player.iType = KingPanzer;
 					}
 					case TFClass_Pyro: {
-						if (player.iVehicleKills >= 5)
+						if (player.iVehicleKills >= 10)
 							player.iType = PanzerIII;
 					}
 					case TFClass_DemoMan: {
-						if (player.iVehicleKills >= 10)
-							player.iType = Tank;
-					}
-					case TFClass_Sniper: {
 						if (player.iVehicleKills >= 15)
 							player.iType = Tank;
 					}
+					case TFClass_Sniper: {
+						if (player.iVehicleKills >= 25)
+							player.iType = Destroyer;
+					}
+					case TFClass_Scout: player.iType = ArmoredCar;
 				}
 				player.bSetOnSpawn = true;
 				if (player.iVehicleKills >= 5)
@@ -199,7 +201,7 @@ public Action PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 		ManageVehicleKillPlayer(fighter, player, event);
 	if (player.bIsVehicle) {
 		fighter.iVehicleKills++;
-		player.iVehicleKills = 0;
+		//player.iVehicleKills = 0;
 	}
 	//if (fighter.bIsVehicle and player.bIsVehicle) //clash of the titans - when both killer and victim are Vehicles
 

@@ -198,52 +198,41 @@ methodmap GameModeManager {
 		float mins[3], maxs[3];
 		mins = Vec_GetEntPropVector(construct, Prop_Send, "m_vecMins");
 		maxs = Vec_GetEntPropVector(construct, Prop_Send, "m_vecMaxs");
+		
+		DispatchSpawn(construct);
+		SetEntProp( construct, Prop_Send, "m_nSolidType", 6 );
+		TeleportEntity(construct, vecOrigin, NULL_VECTOR, NULL_VECTOR);
 
-		if ( !ask or CanBuildHere(vecOrigin, mins, maxs) ) {
-			DispatchSpawn(construct);
-			SetEntProp( construct, Prop_Send, "m_nSolidType", 6 );
-			TeleportEntity(construct, vecOrigin, NULL_VECTOR, NULL_VECTOR);
+		int beamcolor[4] = {0, 255, 90, 255};
 
-			int beamcolor[4] = {0, 255, 90, 255};
+		float vecMins[3], vecMaxs[3];
+		vecMins = Vec_AddVectors(vecOrigin, mins); //AddVectors(vecOrigin, mins, vecMins);
+		vecMaxs = Vec_AddVectors(vecOrigin, maxs); //AddVectors(vecOrigin, maxs, vecMaxs);
 
-			float vecMins[3], vecMaxs[3];
-			mins = Vec_GetEntPropVector(construct, Prop_Send, "m_vecMins");
-			maxs = Vec_GetEntPropVector(construct, Prop_Send, "m_vecMaxs");
+		int laser = PrecacheModel("sprites/laser.vmt", true);
+		TE_SendBeamBoxToAll( vecMaxs, vecMins, laser, laser, 1, 1, 5.0, 8.0, 8.0, 5, 2.0, beamcolor, 0 );
 
-			vecMins = Vec_AddVectors(vecOrigin, mins); //AddVectors(vecOrigin, mins, vecMins);
-			vecMaxs = Vec_AddVectors(vecOrigin, maxs); //AddVectors(vecOrigin, maxs, vecMaxs);
-
-			int laser = PrecacheModel("sprites/laser.vmt", true);
-			TE_SendBeamBoxToAll( vecMaxs, vecMins, laser, laser, 1, 1, 5.0, 8.0, 8.0, 5, 2.0, beamcolor, 0 );
-
-			SetEntProp(construct, Prop_Data, "m_takedamage", 2, 1);
-			SDKHook(construct, SDKHook_OnTakeDamage,	OnConstructTakeDamage);
-			SDKHook(construct, SDKHook_Touch,		OnConstructTouch);
-			
-			SetEntProp(construct, Prop_Data, "m_iHealth", MMCvars[VehicleConstructHP].IntValue);
-			if ( IsValidEntity(construct) and IsValidEdict(construct) ) {
-				int index = this.GetNextEmptyPowerUpSlot(team);
-				if (index == -1) {
-					CPrintToChat(builder, "{red}[Mechanized Mercs] {white}SpawnTankConstruct::Logic Error.");
-					CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
-					return -1;
-				}
-				TankConstruct[team-2][index][ENTREF] = EntIndexToEntRef(construct);
-				TankConstruct[team-2][index][VEHTYPE] = vehtype;
-				TankConstruct[team-2][index][BUILDER] = GetClientUserId(builder);
-				TankConstruct[team-2][index][METAL] = 0;
-				TankConstruct[team-2][index][AMMO] = 0;
-				TankConstruct[team-2][index][HEALTH] = 0;
-				//TankConstruct[team-2][index][PLYRHP] = 0;
-				TankConstruct[team-2][index][MAXMETAL] = metal;
-				return index;
+		SetEntProp(construct, Prop_Data, "m_takedamage", 2, 1);
+		SDKHook(construct, SDKHook_OnTakeDamage,	OnConstructTakeDamage);
+		SDKHook(construct, SDKHook_Touch,		OnConstructTouch);
+		
+		SetEntProp(construct, Prop_Data, "m_iHealth", MMCvars[VehicleConstructHP].IntValue);
+		if ( IsValidEntity(construct) and IsValidEdict(construct) ) {
+			int index = this.GetNextEmptyPowerUpSlot(team);
+			if (index == -1) {
+				CPrintToChat(builder, "{red}[Mechanized Mercs] {white}SpawnTankConstruct::Logic Error.");
+				CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
+				return -1;
 			}
-		}
-		else {
-			CPrintToChat(builder, "{red}[Mechanized Mercs] {white}You can't build that Vehicle there.");
-			CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
-			if (ask)
-				SpawnVehicleGarageMenu(builder, -1);
+			TankConstruct[team-2][index][ENTREF] = EntIndexToEntRef(construct);
+			TankConstruct[team-2][index][VEHTYPE] = vehtype;
+			TankConstruct[team-2][index][BUILDER] = GetClientUserId(builder);
+			TankConstruct[team-2][index][METAL] = 0;
+			TankConstruct[team-2][index][AMMO] = 0;
+			TankConstruct[team-2][index][HEALTH] = 0;
+			//TankConstruct[team-2][index][PLYRHP] = 0;
+			TankConstruct[team-2][index][MAXMETAL] = metal;
+			return index;
 		}
 		return -1;
 	}
