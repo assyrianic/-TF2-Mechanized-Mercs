@@ -4,12 +4,11 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.2.6"
+			"Latest"	"1.2.7"
 		}
 		
-		"Notes"	"More info @ www.sourcemod.net. Changes in 1.2.3:"
-		"Notes"	"upgraded structure placement code"
-		"Notes" "attempted improvement for Gun Game"
+		"Notes"	"More info @ www.sourcemod.net. Changes in 1.2.7:"
+		"Notes"	"tweaked structure placement code to work a bit better"
 	}
 	
 	"Files"

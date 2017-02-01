@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.2.6"
+#define PLUGIN_VERSION		"1.2.7"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -964,7 +964,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 		GetClientEyePosition(client, flEyePos);
 		GetClientEyeAngles(client, flAng);
 /*
-		TR_TraceRayFilter( flEyePos, flAng, MASK_SOLID, RayType_Infinite, TraceFilterIgnorePlayers, client );
+		TR_TraceRayFilter( flEyePos, flAng, MASK_PLAYERSOLID, RayType_Infinite, TraceFilterIgnorePlayers, client );
 
 		if ( TR_GetFraction() < 1.0 ) {
 			float flEndPos[3]; TR_GetEndPosition(flEndPos);
@@ -2048,7 +2048,7 @@ stock bool CalcBuildPos(const int builder, const float flMins[3], const float fl
 	vec_playerRadius[0] = fmax( vecPlayerMins[0], vecPlayerMaxs[0] );
 	vec_playerRadius[1] = fmax( vecPlayerMins[1], vecPlayerMaxs[1] );
 	
-	float fldist = Vec2DLength(vec_objradius) + Vec2DLength(vec_playerRadius) + 4;
+	float fldist = Vec2DLength(vec_objradius) + Vec2DLength(vec_playerRadius) + 4.0;
 	
 	float vecBuildOrigin[3];
 	float vec_playerorigin[3];
@@ -2085,7 +2085,7 @@ stock bool CalcBuildPos(const int builder, const float flMins[3], const float fl
 	float flBoxBottomZ = vec_playerorigin[2] - vHalfPlayerDims[2] - vBuildDims[2];
 	
 	float bottomZ = 0.0;
-	int nIterations = 4;
+	int nIterations = 8;
 	float topZ = flBoxTopZ;
 	float topZInc = (flBoxBottomZ - flBoxTopZ) / (nIterations-1);
 	int iIteration;
@@ -2097,28 +2097,25 @@ stock bool CalcBuildPos(const int builder, const float flMins[3], const float fl
 	
 	float endpos[3];
 	for (iIteration=0 ; iIteration<nIterations ; ++iIteration) {
-		checkOriginTop[2] = topZ;
-		checkOriginBottom[2] = flBoxBottomZ;
+		//checkOriginTop[2] = topZ;
+		//checkOriginBottom[2] = flBoxBottomZ;
 		
-		TR_TraceHull( checkOriginTop, checkOriginBottom, flMins, flMaxs, MASK_SOLID );
+		TR_TraceHull( vecBuildOrigin, vecBuildOrigin, flMins, flMaxs, MASK_SOLID );
 		TR_GetEndPosition(endpos);
 		bottomZ = endpos[2];
 		
-		if (TR_GetFraction() == 1.0) {	// no ground, can't build here!
-			flBuildBuffer = vErrorOrigin;
-			return false;
-		}
-		else if (TR_PointOutsideWorld(checkOriginTop) or TR_PointOutsideWorld(checkOriginBottom)) {
+		if (TR_GetFraction() == 1.0 /*or TR_PointOutsideWorld(endpos)*/) {	// no ground, can't build here!
 			flBuildBuffer = vErrorOrigin;
 			return false;
 		}
 		
 		// if we found enough space to fit our object, place here
 		if ( topZ - bottomZ > vBuildDims[2]
-			and !(TR_GetPointContents(checkOriginTop) & MASK_SOLID)
-			and !(TR_GetPointContents(checkOriginBottom) & MASK_SOLID) )
+			and !(TR_GetPointContents(vecBuildOrigin) & MASK_SOLID)
+			and !(TR_GetPointContents(vecBuildOrigin) & MASK_SOLID) )
 			break;
 		
+		++vecBuildOrigin[2];
 		topZ += topZInc;
 	}
 	if ( iIteration == nIterations ) {
@@ -2141,7 +2138,8 @@ stock bool CalcBuildPos(const int builder, const float flMins[3], const float fl
 	flBuildBuffer = vecBuildOrigin;
 	return true;
 	
-	/*bool bSuccess;
+	/*
+	bool bSuccess;
 	for ( int i=301 ; i ; --i ) {
 		TR_TraceHull( vecBuildOrigin, vecBuildOrigin, flMins, flMaxs, MASK_SOLID );
 		if (bSuccess)
@@ -2154,7 +2152,8 @@ stock bool CalcBuildPos(const int builder, const float flMins[3], const float fl
 	}
 	flBuildBuffer = vecBuildOrigin;
 	PrintToConsole(builder, "%i", (bSuccess == true));
-	return bSuccess;*/
+	return bSuccess;
+	*/
 }
 
 
