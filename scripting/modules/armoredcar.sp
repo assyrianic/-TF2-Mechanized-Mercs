@@ -196,8 +196,8 @@ methodmap CArmCar < CTank
 
 		char attribs[128];
 		if (GamePlayMode.IntValue != GunGame)
-			Format( attribs, sizeof(attribs), "2 ; %f ; 125 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; -2.0", SMG_DAMAGE_MULT, (1-maxhp) );
-		else Format( attribs, sizeof(attribs), "2 ; %f ; 26 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; 1.0", SMG_DAMAGE_MULT, (MMCvars[ArmoredCarHP].IntValue-maxhp) );
+			Format( attribs, sizeof(attribs), "400 ; 1.0 ; 125 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
+		else Format( attribs, sizeof(attribs), "26 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; 1.0", (MMCvars[ArmoredCarHP].IntValue-maxhp) );
 
 		int Turret = this.SpawnWeapon("tf_weapon_smg", 16, 1, 0, attribs);
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", Turret);

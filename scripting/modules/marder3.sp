@@ -147,8 +147,8 @@ methodmap CDestroyer < CTank
 
 		char attribs[150];
 		if (GamePlayMode.IntValue != GunGame)
-			Format( attribs, sizeof(attribs), "125 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.2 ; 5 ; 3.0 ; 2 ; 3.8 ; 103 ; 3.636 ; 68 ; -2.0", (1-maxhp) );
-		else Format( attribs, sizeof(attribs), "26 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.2 ; 5 ; 3.0 ; 2 ; 3.8 ; 103 ; 3.636 ; 68 ; -2.0", (MMCvars[Marder3HP].IntValue-maxhp) );
+			Format( attribs, sizeof(attribs), "125 ; %i ; 400 ; 1.0 ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.2 ; 5 ; 3.0 ; 2 ; 3.8 ; 103 ; 3.636 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
+		else Format( attribs, sizeof(attribs), "26 ; %i ; 400 ; 1.0 ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.2 ; 5 ; 3.0 ; 2 ; 3.8 ; 103 ; 3.636 ; 68 ; -1.0", (MMCvars[Marder3HP].IntValue-maxhp) );
 
 		int Turret = this.SpawnWeapon("tf_weapon_rocketlauncher_directhit", 127, 1, 0, attribs);
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", Turret);

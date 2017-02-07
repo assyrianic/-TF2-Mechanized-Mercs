@@ -156,8 +156,8 @@ methodmap CLightTank < CTank
 
 		char attribs[128];
 		if (GamePlayMode.IntValue != GunGame)
-			Format( attribs, sizeof(attribs), "356 ; 1.0 ; 125 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 99 ; 2.0 ; 68 ; -2.0", (1-maxhp) );
-		else Format( attribs, sizeof(attribs), "356 ; 1.0 ; 26 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 99 ; 2.0 ; 68 ; -2.0", (MMCvars[LightPanzerHP].IntValue-maxhp) );
+			Format( attribs, sizeof(attribs), "356 ; 1.0 ; 400 ; 1.0 ; 125 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 99 ; 2.0 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
+		else Format( attribs, sizeof(attribs), "356 ; 1.0 ; 400 ; 1.0 ; 26 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 99 ; 2.0 ; 68 ; -1.0", (MMCvars[LightPanzerHP].IntValue-maxhp) );
 
 		int Turret;
 		if (GamePlayMode.IntValue != GunGame) {

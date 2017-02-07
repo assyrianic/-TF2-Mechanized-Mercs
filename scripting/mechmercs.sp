@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.2.7"
+#define PLUGIN_VERSION		"1.3.0"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -71,6 +71,8 @@ enum {
 	ArmoredCarGunDmg,
 	MaxSMGAmmo,
 	RocketSpeed,
+	AdvertTime,
+	ReplacePowerups,
 	VehicleConstructHP,
 	BuildSetUpTime,
 	ConstructMetalAdd,
@@ -288,6 +290,10 @@ public void OnPluginStart()
 	
 	MMCvars[RocketSpeed] = CreateConVar("mechmercs_tankrocket_speed", "4000.0", "how fast the mouse2 rockets travel.", FCVAR_NONE, true, 1.0, true, 999999.0);
 	
+	MMCvars[AdvertTime] = CreateConVar("mechmercs_advert_time", "120.0", "how much time in seconds the advertisement will message.", FCVAR_NONE, true, 1.0, true, 999999.0);
+	
+	MMCvars[ReplacePowerups] = CreateConVar("mechmercs_replace_powerups", "1", "replaces mannpower powerups with ready-to-use tank constructs.", FCVAR_NONE, true, 0.0, true, 1.0);
+	
 	AutoExecConfig(true, "Mechanized-Mercenaries");
 	
 	hHudText = CreateHudSynchronizer();
@@ -422,16 +428,18 @@ public void OnMapStart()
 	CreateTimer(0.1, Timer_VehicleThink, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.1, Timer_GarageThink, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(5.0, MakeModelTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(120.0, Timer_Announce, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(MMCvars[AdvertTime].FloatValue, Timer_Announce, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	
 	GetCurrentMap(szCurrMap, sizeof(szCurrMap));
+	
 	// Mann vs. Machine compatibility
 	if (StrContains(szCurrMap, "mvm_") != -1) {
+		GamePlayMode.IntValue = 2;
 		AllowBlu.IntValue = 0;
 		AllowRed.IntValue = 1;
 		manager.bisMVM = true;
 	}
-	// VSH game mode compatibility!
+	// mediocre VSH game mode compatibility
 	else if (StrContains(szCurrMap, "vsh_") != -1 or StrContains(szCurrMap, "arena_") != -1)
 	{
 		AllowBlu.IntValue = 0;
@@ -1648,7 +1656,7 @@ public void OnEntityCreated(int entity, const char[] classname)
 	if (!bEnabled.BoolValue or !IsValidEntity(entity))
 		return;
 
-	if ( GamePlayMode.IntValue == Powerup and StrContains(classname, "rune") != -1 )
+	if ( GamePlayMode.IntValue == Powerup and MMCvars[ReplacePowerups].BoolValue and StrContains(classname, "rune") != -1 )
 		SDKHook(entity, SDKHook_SpawnPost, HookPowerup);
 }
 

@@ -84,19 +84,19 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 		//TF2_AddCondition(client, TFCond_MegaHeal, 0.1);
 		/* prevent tanks from being airblasted and gives a team colored aura to allow teams to tell who's on what side */
 
-		for ( int i=MaxClients ; i ; --i ) {
+		for (int i=MaxClients ; i ; --i) {
 			if ( !IsValidClient(i) )
 				continue;
-
+			
 			else if ( !IsPlayerAlive(i) or !IsInRange(client, i, 300.0) )
 				continue;
-				
+			
 			else if ( BaseVehicle(i).bIsVehicle )
 				continue;
 			
 			else if ( GetClientTeam(i) != this.iTeam or i == client )
 				continue;
-
+			
 			int maxhp = GetEntProp(i, Prop_Data, "m_iMaxHealth");
 			int curHealth = GetClientHealth(i);
 			if ( curHealth < maxhp )
@@ -128,7 +128,7 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 	public void Equip ()
 	{
 		int ent = -1;
-		while ((ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1)
+		while ( (ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1 )
 		{
 			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == this.index)
 				AcceptEntityInput(ent, "Kill");
@@ -138,7 +138,7 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 		int maxhp = GetEntProp(this.index, Prop_Data, "m_iMaxHealth");
 
 		char attribs[128];
-		Format( attribs, sizeof(attribs), "2 ; %f ; 125 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; -2.0", SMG_DAMAGE_MULT, (1-maxhp) );
+		Format( attribs, sizeof(attribs), "400 ; 1.0 ; 125 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
 
 		int Turret = this.SpawnWeapon("tf_weapon_smg", 16, 1, 0, attribs);
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", Turret);

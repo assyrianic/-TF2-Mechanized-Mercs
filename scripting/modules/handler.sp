@@ -488,8 +488,7 @@ force the left and right buttons to instead turn player angles and nullify the v
 */
 	if ( player.bIsVehicle and !IsFakeClient(client) ) {
 		switch (player.iType) {
-			case ArmoredCar, Ambulance, Destroyer:
-			{
+			case ArmoredCar, Ambulance, Destroyer: {
 				if ( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] += 10.0;
 					vel[1] = 1.0;
@@ -503,8 +502,7 @@ force the left and right buttons to instead turn player angles and nullify the v
 					return Plugin_Changed;
 				}
 			}
-			case Tank,PanzerIII:
-			{
+			case Tank,PanzerIII: {
 				if ( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] += 7.0;
 					vel[1] = 1.0;
@@ -518,8 +516,7 @@ force the left and right buttons to instead turn player angles and nullify the v
 					return Plugin_Changed;
 				}
 			}
-			case KingPanzer:
-			{
+			case KingPanzer: {
 				if ( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] += 4.0;
 					vel[1] = 1.0;
@@ -567,8 +564,7 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 	if ( !player.bIsVehicle )
 		return;
 
-	switch (condition)
-	{
+	switch (condition) {
 		case TFCond_Bleeding, TFCond_OnFire, TFCond_Jarated, TFCond_Milked: /* vehicles shouldn't bleed or be flammable */
 			TF2_RemoveCondition(client, condition);
 	}
@@ -596,10 +592,10 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		
 		TF2Item hItemCast = view_as< TF2Item >(hItem);
 		switch (iItemDefinitionIndex) {
-			case 127: hItemOverride = PrepareItemHandle(hItemCast, _, _, "3 ; 0.2 ; 77 ; 0.5 ; 96 ; 2.0 ; 2 ; 1.5 ; 411 ; 1.0");
+			case 127: hItemOverride = PrepareItemHandle(hItemCast, _, _, "3 ; 0.2 ; 77 ; 0.5 ; 96 ; 1.5 ; 2 ; 1.5 ; 411 ; 1.0");
 			//case 414: hItemOverride = PrepareItemHandle(hItemCast, _, _, "114 ; 1.0 ; 99 ; 1.25");
-			case 1104: hItemOverride = PrepareItemHandle(hItemCast, _, _, "96 ; 2.0 ; 411 ; 3");
-			default: hItemOverride = PrepareItemHandle(hItemCast, _, _, "3 ; 0.2 ; 77 ; 0.5 ; 96 ; 2.0 ; 2 ; 1.5 ; 411 ; 3.0");
+			case 1104: hItemOverride = PrepareItemHandle(hItemCast, _, _, "96 ; 1.5 ; 411 ; 3");
+			default: hItemOverride = PrepareItemHandle(hItemCast, _, _, "3 ; 0.2 ; 77 ; 0.5 ; 96 ; 1.5 ; 2 ; 1.5 ; 411 ; 3.0");
 		}
 	}
 	if (hItemOverride != null) {
