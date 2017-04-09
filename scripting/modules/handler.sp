@@ -14,7 +14,7 @@ enum /*Vehicles*/ {	/* When you add custom vehicles, add to the anonymous enum a
 stock bool IsClassUnlocked(const BaseVehicle base)	// GLITCHY
 {
 	int flag = GarageFlags[base.iTeam-2];
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case ArmoredCar, Ambulance: {
 			if ( !(flag & SUPPORTBUILT) )
 				return false;
@@ -52,7 +52,7 @@ public void ManageDownloads()
 
 	char s[PLATFORM_MAX_PATH];
 	int i;
-	for (i=1; i<6; i++) {
+	for( i=1 ; i<6 ; i++ ) {
 		Format(s, PLATFORM_MAX_PATH, "weapons/fx/rics/ric%i.wav", i);
 		PrecacheSound(s, true);
 	}
@@ -60,7 +60,9 @@ public void ManageDownloads()
 	PrecacheSound("weapons/wrench_hit_build_success1.wav", true);
 	PrecacheSound("weapons/wrench_hit_build_success2.wav", true);
 	PrecacheSound("weapons/wrench_hit_build_fail.wav", true);
-	for (i=0; i<sizeof(VehicleHorns); i++) {
+	PrecacheSound("weapons/flaregun_worldreload.wav", true);
+	
+	for( i=0 ; i<sizeof(VehicleHorns) ; i++) {
 		PrecacheSound(VehicleHorns[i], true);
 		Format(s, PLATFORM_MAX_PATH, "sound/%s", VehicleHorns[i]);
 		CheckDownload(s);
@@ -71,7 +73,7 @@ public void ManageDownloads()
 	char extensionsb[][] = { ".vtf", ".vmt" };
 
 	PrecacheModel(OfficerModel, true);
-	for (i = 0; i < sizeof(extensions); i++) {
+	for( i=0; i<sizeof(extensions); i++ ) {
 		Format(s, PLATFORM_MAX_PATH, "%s%s", OfficerModelPrefix, extensions[i]);
 		CheckDownload(s);
 		
@@ -82,7 +84,7 @@ public void ManageDownloads()
 		Format(s, PLATFORM_MAX_PATH, "models/structures/combine/synthfac%s", extensions[i]);
 		CheckDownload(s);
 	}
-	for (i = 0; i < sizeof(extensionsb); i++) {
+	for( i=0 ; i<sizeof(extensionsb) ; i++ ) {
 		Format(s, PLATFORM_MAX_PATH, "materials/models/custom/army_spy/cigar_blue%s", extensionsb[i]);
 		CheckDownload(s);
 		Format(s, PLATFORM_MAX_PATH, "materials/models/custom/army_spy/cigar_normal%s", extensionsb[i]);
@@ -143,7 +145,7 @@ public void ManageMenu( Menu& menu )
 */
 public void ManageHealth(const BaseVehicle base)
 {
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case -1: {}
 		case Tank: {
 			CTank tanker = ToCTank(base);
@@ -178,23 +180,19 @@ public void ManageConnect(const int client)
 
 public void ManageOnTouchPlayer(const BaseVehicle base, const BaseVehicle victim)
 {
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case -1: {}
-		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer:
-		{
-			//if ( buttons & (IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT) )
-
-			if ( GetEntPropEnt(victim.index, Prop_Send, "m_hGroundEntity") == base.index ) // If human/vehicle on vehicle, ignore.
+		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer: {
+			if( GetEntPropEnt(victim.index, Prop_Send, "m_hGroundEntity") == base.index ) // If human/vehicle on vehicle, ignore.
 				return;
 
-			if ( GetEntPropEnt(base.index, Prop_Send, "m_hGroundEntity") == victim.index ) // Vehicle is standing on player, kill them!
+			if( GetEntPropEnt(base.index, Prop_Send, "m_hGroundEntity") == victim.index ) // Vehicle is standing on player, kill them!
 				SDKHooks_TakeDamage(victim.index, base.index, base.index, CrushDmg.FloatValue*5.0, DMG_VEHICLE);
 
 			//int buttons = GetClientButtons(base.index);
 
 			float vecShoveDir[3];	GetEntPropVector(base.index, Prop_Data, "m_vecAbsVelocity", vecShoveDir);
-			if ( vecShoveDir[0] != 0.0 and vecShoveDir[1] != 0.0 )
-			{
+			if( vecShoveDir[0] != 0.0 and vecShoveDir[1] != 0.0 ) {
 				float entitypos[3];	GetEntPropVector(base.index, Prop_Data, "m_vecAbsOrigin", entitypos);
 				float targetpos[3];	GetEntPropVector(victim.index, Prop_Data, "m_vecAbsOrigin", targetpos);
 
@@ -204,7 +202,7 @@ public void ManageOnTouchPlayer(const BaseVehicle base, const BaseVehicle victim
 				vecShoveDir = Vec_NormalizeVector(vecShoveDir);
 				vecTargetDir = Vec_NormalizeVector(vecTargetDir);
 				
-				if ( GetVectorDotProduct(vecShoveDir, vecTargetDir) <= 0 )
+				if( GetVectorDotProduct(vecShoveDir, vecTargetDir) <= 0 )
 					SDKHooks_TakeDamage(victim.index, base.index, base.index, CrushDmg.FloatValue, DMG_VEHICLE);
 			}
 		}
@@ -219,10 +217,9 @@ for buildings, it's unnecessary to do vector math because it's impossible to bui
 
 public void ManageOnTouchBuilding(const BaseVehicle base, const int building)
 {
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case -1: {}
-		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer:
-		{
+		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer: {
 			SDKHooks_TakeDamage( building, base.index, base.index, CrushDmg.FloatValue/2.0, DMG_VEHICLE);
 			//SetVariantInt( RoundToCeil(CrushDmg.FloatValue)/2 );
 			//AcceptEntityInput(building, "RemoveHealth");
@@ -232,7 +229,7 @@ public void ManageOnTouchBuilding(const BaseVehicle base, const int building)
 
 public void ManageVehicleThink(const BaseVehicle base)
 {
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case -1: {}
 		case Tank:		ToCTank(base).Think();
 		case ArmoredCar:	ToCArmCar(base).Think();
@@ -245,7 +242,7 @@ public void ManageVehicleThink(const BaseVehicle base)
 
 public void ManageVehicleModels(const BaseVehicle base)
 {
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case -1: {}
 		case Tank:		ToCTank(base).SetModel();
 		case ArmoredCar:	ToCArmCar(base).SetModel();
@@ -258,7 +255,7 @@ public void ManageVehicleModels(const BaseVehicle base)
 
 public void ManageVehicleDeath(const BaseVehicle base)
 {
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case -1: {}
 		case Tank:		ToCTank(base).Death();
 		case ArmoredCar:	ToCArmCar(base).Death();
@@ -267,16 +264,11 @@ public void ManageVehicleDeath(const BaseVehicle base)
 		case PanzerIII:		ToCLightTank(base).Death();
 		case Destroyer:		ToCDestroyer(base).Death();
 	}
-	if (GamePlayMode.IntValue == Powerup) {
-		base.bIsVehicle = false;
-		base.Reset();
-		//TF2_RegeneratePlayer(base.index);
-	}
 }
 
 public void ManageVehicleTransition(const BaseVehicle base) /* whatever stuff needs initializing should be done here */
 {
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case -1: {}
 		case Tank: {
 			CTank tanker = ToCTank(base);
@@ -330,26 +322,40 @@ public Action ManageOnVehicleTakeDamage(const BaseVehicle victim, int &attacker,
 				damage *= 0.0;
 				return Plugin_Changed;
 			}
-			if ( (attacker > MaxClients or attacker <= 0) and !(damagetype & DMG_FALL) )	// if null attacker, just kill the vehicle outright
-			{
+			if ( (attacker > MaxClients or attacker <= 0) and !(damagetype & DMG_FALL) ) {	// if null attacker, just kill the vehicle outright
 				//TF2_IgnitePlayer(tanker, attacker);
 				CreateTimer(0.1, Timer_VehicleDeath, victim.userid);
 				return Plugin_Continue;
 			}
-			else if ( damage > 100.0 and !strcmp(classname, "tf_weapon_knife", false) )	// Vehicles shouldn't die from a single backstab
-				damage = 1.67;
+			
+			if ( damage > 100.0 and !strcmp(classname, "tf_weapon_knife", false) ) {	// Vehicles shouldn't die from a single backstab
+				damage = 50.0/6.0;	// backstab calc will result this to 100 dmg. 
+				TF2_AddCondition(victim.index, TFCond_MarkedForDeath, 15.0, inflictor);
+				SetEntProp(victim.index, Prop_Send, "m_bGlowEnabled", 1);
+				SetPawnTimer(_RemoveGlow, 15.0, victim);
+				return Plugin_Changed;
+			}
+			
+			if( TF2_IsPlayerInCondition(victim.index, TFCond_MarkedForDeath) )
+				damage *= 2.0;
+			
+			if( TF2_IsPlayerInCondition(victim.index, TFCond_Jarated) )
+				damage *= 1.25;
 
-			if ( damagetype & DMG_CRIT )	// Vehicles don't take crits, think of them as Building Human hybrids.
+			if ( damagetype & DMG_CRIT ) {	// Vehicles don't take crits, think of them as Building Human hybrids.
 				damage /= 3.0;
+				return Plugin_Changed;
+			}
 
 			if ( !damagecustom and TF2_IsPlayerInCondition(tanker, TFCond_Taunting) and TF2_IsPlayerInCondition(attacker, TFCond_Taunting) )
 			{
 				damage = victim.iHealth+0.1;	// Rock Paper Scissors patch. RPS damagecustom ID is 0
 				return Plugin_Changed;
 			}
+				
 
 			/* vehicles are weak to explosives but not to bullets and fire */
-			{
+			/*{
 				if ( !strcmp(strEntname, "tf_projectile_rocket", false)
 					or !strcmp(classname, "tf_weapon_grenadelauncher", false)
 					or !strcmp(classname, "tf_weapon_pipebomblauncher", false)
@@ -372,7 +378,8 @@ public Action ManageOnVehicleTakeDamage(const BaseVehicle victim, int &attacker,
 					damage *= 0.2;
 				}
 				return Plugin_Changed;
-			}
+			}*/
+			return Plugin_Changed;
 		}
 	}
 	return Plugin_Continue;
@@ -382,7 +389,7 @@ public Action ManageOnVehicleDealDamage(const BaseVehicle victim, int &attacker,
 {
 	float Pos[3]; GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", Pos);	// Spot of attacker
 	float Pos2[3]; GetEntPropVector(victim.index, Prop_Send, "m_vecOrigin", Pos2);	// Spot of victim
-	float dist = GetVectorDistance(Pos, Pos2, false);	// Calculate dist between target and attacker
+	float dist = GetVectorDistance(Pos, Pos2, false);				// Calculate dist between target and attacker
 	char classname[64], strEntname[32];
 
 	if (IsValidEdict(inflictor))
@@ -392,12 +399,10 @@ public Action ManageOnVehicleDealDamage(const BaseVehicle victim, int &attacker,
 
 	switch ( BaseVehicle(attacker).iType ) {
 		case -1: {}
-		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer:
-		{
-			if ( victim.index != attacker and victim.iTeam != GetClientTeam(attacker) )
-			{
-				if ( !strcmp(strEntname, "tf_projectile_rocket", false) )	// void damage fall off
-				{
+		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer: {
+			if( victim.index != attacker and victim.iTeam != GetClientTeam(attacker) ) {
+				// void damage fall off
+				/*if ( !strcmp(strEntname, "tf_projectile_rocket", false) ) {
 					if (dist > 966.0)
 						dist = 966.0;
 					if (dist < 409.6)
@@ -412,7 +417,7 @@ public Action ManageOnVehicleDealDamage(const BaseVehicle victim, int &attacker,
 						dist = 341.33;
 					damage *= dist/512.0;
 					return Plugin_Changed;
-				}
+				}*/
 			}
 		}
 	}
@@ -440,10 +445,10 @@ public void ManageVehicleKillPlayer(const BaseVehicle attacker, const BaseVehicl
 
 public void ManageVehicleEngieHit(const BaseVehicle base, const BaseVehicle engie)
 {
-	if (engie.bIsVehicle)	// PATCH: Prevent engineers, who turned into vehicles, from "fixing" other vehicles by shooting em.
+	if( engie.bIsVehicle )		// PATCH: Prevent engineers, who turned into vehicles, from "fixing" other vehicles by shooting em.
 		return;
 	
-	switch ( base.iType ) {
+	switch( base.iType ) {
 		case -1: {}
 		case Tank:		ToCTank(base).DoEngieInteraction(engie);
 		case ArmoredCar:	ToCArmCar(base).DoEngieInteraction(engie);
@@ -463,9 +468,21 @@ public void ManageVehicleNearDispenser(const BaseVehicle base)
 		if (base.flGas > startingfuel)
 			base.flGas = startingfuel;
 	}
+	
+	if( GetRandomInt(0, 100) >= 75 ) {
+		switch( base.iType ) {
+			case -1: {}
+			case Tank:		ToCTank(base).Heal();
+			case ArmoredCar:	ToCArmCar(base).Heal();
+			case Ambulance:		ToCAmbulance(base).Heal();
+			case KingPanzer:	ToCKingTank(base).Heal();
+			case PanzerIII:		ToCLightTank(base).Heal();
+			case Destroyer:		ToCDestroyer(base).Heal();
+		}
+	}
 }
 
-public void ManageVehicleMedigunHeal(const BaseVehicle base, const BaseVehicle medic) //Mediguns should give gas instead of actually healing
+public void ManageVehicleMedigunHeal(const BaseVehicle base, const BaseVehicle medic)	// Mediguns should give gas instead of actually healing
 {
 	if ( bGasPowered.BoolValue ) {
 		float startingfuel = StartingFuel.FloatValue;
@@ -545,33 +562,28 @@ force the left and right buttons to instead turn player angles and nullify the v
 			return Plugin_Changed;
 		}
 	}
-	else if (player.Class == TFClass_Soldier or player.Class == TFClass_Engineer) 
-	{
-		if ( player.iSecWep > MaxClients and IsValidEntity(player.iSecWep) and (buttons & IN_ATTACK3) )
-			SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", player.iSecWep);
-	}
 	return Plugin_Continue;
 }
 public void _ResetHorn(const BaseVehicle client)
 {
-	if (IsClientValid(client.index))
+	if( IsClientValid(client.index) )
 		client.bHonkedHorn = false;
 }
 
 public void TF2_OnConditionAdded(int client, TFCond condition)
 {
 	BaseVehicle player = BaseVehicle(client);
-	if ( !player.bIsVehicle )
+	if( !player.bIsVehicle )
 		return;
 
-	switch (condition) {
-		case TFCond_Bleeding, TFCond_OnFire, TFCond_Jarated, TFCond_Milked: /* vehicles shouldn't bleed or be flammable */
+	switch( condition ) {
+		case TFCond_Bleeding, TFCond_OnFire/*, TFCond_Jarated*/:	/* vehicles shouldn't bleed or be flammable */
 			TF2_RemoveCondition(client, condition);
 	}
 }
 public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
 {
-	if ( !AllowVehicleTele.BoolValue and BaseVehicle(client).bIsVehicle ) {
+	if( !AllowVehicleTele.BoolValue and BaseVehicle(client).bIsVehicle ) {
 		result = false;
 		return Plugin_Changed;
 	}
@@ -582,14 +594,10 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 {
 	if ( !bEnabled.BoolValue )
 		return Plugin_Continue;
-
+	/*
 	TF2Item hItemOverride = null;
 	
-	if (!strncmp(classname, "tf_weapon_rocketlauncher", 24, false) or !strncmp(classname, "tf_weapon_particle_cannon", 25, false))
-	{
-		if (GamePlayMode.IntValue == Powerup)	// no sense checking gungame since there's no soldiers
-			return Plugin_Continue;
-		
+	if (!strncmp(classname, "tf_weapon_rocketlauncher", 24, false) or !strncmp(classname, "tf_weapon_particle_cannon", 25, false)) {	
 		TF2Item hItemCast = view_as< TF2Item >(hItem);
 		switch (iItemDefinitionIndex) {
 			case 127: hItemOverride = PrepareItemHandle(hItemCast, _, _, "3 ; 0.2 ; 77 ; 0.5 ; 96 ; 1.5 ; 2 ; 1.5 ; 411 ; 1.0");
@@ -601,6 +609,6 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 	if (hItemOverride != null) {
 		hItem = view_as< Handle >(hItemOverride);
 		return Plugin_Changed;
-	}
+	}*/
 	return Plugin_Continue;
 }

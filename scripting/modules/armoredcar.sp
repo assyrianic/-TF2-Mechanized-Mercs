@@ -19,6 +19,17 @@ methodmap CArmCar < CTank
 	{
 		return view_as<CArmCar>( CTank(ind, uid) );
 	}
+	
+	property int iCannonClipsize
+	{
+		public get() {				//{ return RightClickAmmo[ this.index ]; } {
+			int item; hFields[this.index].GetValue("iCannonClipsize", item);
+			return item;
+		}
+		public set( const int val ) {		//{ RightClickAmmo[ this.index ] = val; } {
+			hFields[this.index].SetValue("iCannonClipsize", val);
+		}
+	}
 
 	public void PlaySpawnSound (const int number)
 	{
@@ -32,11 +43,6 @@ methodmap CArmCar < CTank
 		int client = this.index;
 		if ( !IsPlayerAlive(client) )
 			return;
-		
-		if (GamePlayMode.IntValue == GunGame and this.iHealth < MMCvars[ArmoredCarHP].IntValue) {
-			this.iHealth++;
-			SetEntityHealth(client, this.iHealth);
-		}
 
 		int buttons = GetClientButtons(client);
 		float vell[3];	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", vell);
@@ -81,7 +87,7 @@ methodmap CArmCar < CTank
 		}
 		else {
 			StopSound(client, SNDCHAN_AUTO, ArmCarMove);
-
+			
 			this.flGas += 0.001;
 			if (this.flSoundDelay != 0.0)
 				this.flSoundDelay = 0.0;
@@ -96,34 +102,40 @@ methodmap CArmCar < CTank
 				this.flSpeed = ARMCAR_INITSPEED;
 		}
 
-		if ( bGasPowered.BoolValue and this.flGas <= 0.0 )
+		if( bGasPowered.BoolValue and this.flGas <= 0.0 )
 			this.flSpeed = 1.0;
 		SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", this.flSpeed);
 
-		if ( (buttons & IN_ATTACK2) and this.bIsVehicle )	// MOUSE2 20mm Hitscan Cannon
-		{
-			if ( this.flLastFire < currtime ) {
+		if( (buttons & IN_ATTACK2) and this.bIsVehicle ) {	// MOUSE2 20mm Hitscan Cannon
+			if( this.flLastFire < currtime ) {
+				if( this.iCannonClipsize <= 0 ) {
+					this.flLastFire = currtime + 1.3;
+					SetPawnTimer(_ReloadCannon, 1.0, this);
+					EmitSoundToAll("weapons/flaregun_worldreload.wav", client, SNDCHAN_AUTO);
+					EmitSoundToAll("weapons/flaregun_worldreload.wav", client, SNDCHAN_AUTO);
+					return;
+				}
 				float vPosition[3], vAngles[3], vVec[3];
 				GetClientEyePosition(client, vPosition);
 				GetClientEyeAngles(client, vAngles);
-
+				
 				vVec[0] = Cosine( DegToRad(vAngles[1]) ) * Cosine( DegToRad(vAngles[0]) );
 				vVec[1] = Sine( DegToRad(vAngles[1]) ) * Cosine( DegToRad(vAngles[0]) );
 				vVec[2] = -Sine( DegToRad(vAngles[0]) );
-
+				
 				vPosition[0] += vVec[0] * 40.0;
 				vPosition[1] += vVec[1] * 40.0;
 				vPosition[2] += vVec[2] * 40.0;
 				vPosition[2] += 3.0;
-
+				
 				float RandAngle = GetRandomFloat(0.0, 360.0); // Handle's 20mm Cannon accuracy
 				float RandMagnitudeX = (GetRandomInt(0, 250) / 100.0), RandMagnitudeY = (GetRandomInt(0, 250) / 100.0);
-
+				
 				vAngles[0] += (RandMagnitudeX)*Cosine(RandAngle) * (GetRandomInt(0, 1) == 1 ? -1 : 1);
 				vAngles[1] += (RandMagnitudeY)*Sine(RandAngle) * (GetRandomInt(0, 1) == 1 ? -1 : 1);
 
 				int beamcolor[4];
-				switch (this.iTeam) {
+				switch( this.iTeam ) {
 					case 2: { beamcolor[0] = 190; beamcolor[1] = 59; beamcolor[2] = 59; }
 					case 3: { beamcolor[0] = 71; beamcolor[1] = 102; beamcolor[2] = 190; }
 				}
@@ -154,6 +166,7 @@ methodmap CArmCar < CTank
 				EmitSoundToAll(ArmCarShoot, client, SNDCHAN_AUTO); EmitSoundToAll(ArmCarShoot, client, SNDCHAN_AUTO); EmitSoundToAll(ArmCarShoot, client, SNDCHAN_AUTO);
 				// Sounds from Company of Heroes 1
 				this.flLastFire = currtime + 0.4;
+				this.iCannonClipsize -= 1;
 
 				float PunchVec[3] = {40.0, 0.0, 30.0};
 				SetEntPropVector(client, Prop_Send, "m_vecPunchAngleVel", PunchVec);
@@ -167,7 +180,7 @@ methodmap CArmCar < CTank
 		SetVariantString(ArmCarModel);
 		AcceptEntityInput(this.index, "SetCustomModel");
 		SetEntProp(this.index, Prop_Send, "m_bUseClassAnimations", 1);
-		/*SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.25);*/
+		SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
 	}
 
 	public void Death ()
@@ -195,14 +208,13 @@ methodmap CArmCar < CTank
 		int maxhp = GetEntProp(this.index, Prop_Data, "m_iMaxHealth");
 
 		char attribs[128];
-		if (GamePlayMode.IntValue != GunGame)
-			Format( attribs, sizeof(attribs), "400 ; 1.0 ; 125 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
-		else Format( attribs, sizeof(attribs), "26 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; 1.0", (MMCvars[ArmoredCarHP].IntValue-maxhp) );
-
+		Format( attribs, sizeof(attribs), "400 ; 1.0 ; 125 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
 		int Turret = this.SpawnWeapon("tf_weapon_smg", 16, 1, 0, attribs);
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", Turret);
 		SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
 		SetWeaponAmmo(Turret, 0);
+		this.iRockets = MMCvars[MaxRocketAmmo].IntValue * 2;	// 100 default
+		this.iCannonClipsize = 5;
 	}
 
 	public void DoEngieInteraction(BaseVehicle engie)
@@ -251,6 +263,12 @@ methodmap CArmCar < CTank
 				SetWeaponClip(Turret, clip+repairamount*mult);
 				if (clip > MMCvars[MaxSMGAmmo].IntValue)
 					SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
+				
+				this.iRockets += repairamount*mult;
+				if( this.iRockets > MMCvars[MaxRocketAmmo].IntValue * 2 )
+					this.iRockets = MMCvars[MaxRocketAmmo].IntValue * 2;
+				
+				this.iCannonClipsize = 5;
 
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
@@ -259,6 +277,22 @@ methodmap CArmCar < CTank
 				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			else EmitSoundToClient(engie.index, "weapons/wrench_hit_build_fail.wav");
 		}
+	}
+	public void Heal()
+	{
+		//this.iHealth += 1;
+		//if (this.iHealth > MMCvars[ArmoredCarHP].IntValue)
+		//	this.iHealth = MMCvars[ArmoredCarHP].IntValue;
+		
+		int Turret = GetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon");
+		int clip = GetWeaponClip(Turret);
+		SetWeaponClip(Turret, ++clip);
+		if (clip > MMCvars[MaxSMGAmmo].IntValue) 
+			SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
+			
+		this.iRockets += 1;
+		if( this.iRockets > MMCvars[MaxRocketAmmo].IntValue )
+			this.iRockets = MMCvars[MaxRocketAmmo].IntValue;
 	}
 };
 
@@ -315,5 +349,18 @@ public void AddArmCarToMenu( Menu& menu )
 {
 	menu.AddItem("2", "Armored Car");
 }
-
+public void _ReloadCannon(const CArmCar car)
+{
+	if( car.iRockets <= 0 )
+		return;
+	
+	int reload_amount = 5;
+	
+	// If there's less than 5 rocket ammo remaining
+	if( car.iRockets < reload_amount )
+		reload_amount = car.iRockets;
+	
+	car.iCannonClipsize += reload_amount;
+	car.iRockets -= reload_amount;
+}
 

@@ -12,7 +12,7 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 {
 	public CAmbulance (const int ind, bool uid=false)
 	{
-		return view_as<CAmbulance>( CTank(ind, uid) );
+		return view_as< CAmbulance >( CTank(ind, uid) );
 	}
 
 	public void Think ()
@@ -84,22 +84,22 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 		//TF2_AddCondition(client, TFCond_MegaHeal, 0.1);
 		/* prevent tanks from being airblasted and gives a team colored aura to allow teams to tell who's on what side */
 
-		for (int i=MaxClients ; i ; --i) {
-			if ( !IsValidClient(i) )
+		for( int i=MaxClients ; i ; --i ) {
+			if( !IsValidClient(i) )
 				continue;
 			
-			else if ( !IsPlayerAlive(i) or !IsInRange(client, i, 300.0) )
+			else if( !IsPlayerAlive(i) or !IsInRange(client, i, 250.0) )
 				continue;
 			
-			else if ( BaseVehicle(i).bIsVehicle )
+			else if( BaseVehicle(i).bIsVehicle )
 				continue;
 			
-			else if ( GetClientTeam(i) != this.iTeam or i == client )
+			else if( GetClientTeam(i) != this.iTeam or i == client )
 				continue;
 			
 			int maxhp = GetEntProp(i, Prop_Data, "m_iMaxHealth");
 			int curHealth = GetClientHealth(i);
-			if ( curHealth < maxhp )
+			if( curHealth < maxhp )
 				SetEntityHealth( i, ++curHealth );
 
 			TF2_AddCondition(i, TFCond_InHealRadius, 0.1);
@@ -159,17 +159,13 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 		if (IsValidEdict(hClientWeapon))
 			GetEdictClassname(hClientWeapon, classname, sizeof(classname));
 	
-		if ( !strcmp(classname, "tf_weapon_wrench", false) or !strcmp(classname, "tf_weapon_robot_arm", false) )
-		{
+		if ( !strcmp(classname, "tf_weapon_wrench", false) or !strcmp(classname, "tf_weapon_robot_arm", false) ) {
 			if (this.iHealth > 0 and this.iHealth < MMCvars[AmbulanceHP].IntValue) {
 				if (iCurrentMetal < repairamount)
 					repairamount = iCurrentMetal;
 
 				if ( (MMCvars[AmbulanceHP].IntValue - this.iHealth < repairamount*mult) )
-					repairamount = RoundToCeil( float((MMCvars[AmbulanceHP].IntValue - this.iHealth)/mult) );
-
-				if (repairamount < 1 and iCurrentMetal > 0)
-					repairamount = 1;
+					repairamount = RoundToCeil( float(MMCvars[AmbulanceHP].IntValue - this.iHealth)/float(mult) );
 
 				this.iHealth += repairamount*mult;
 
@@ -201,6 +197,19 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			else EmitSoundToClient(engie.index, "weapons/wrench_hit_build_fail.wav");
 		}
+	}
+	
+	public void Heal()
+	{
+		//this.iHealth += 1;
+		//if (this.iHealth > MMCvars[AmbulanceHP].IntValue)
+		//	this.iHealth = MMCvars[AmbulanceHP].IntValue;
+		
+		int Turret = GetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon");
+		int clip = GetWeaponClip(Turret);
+		SetWeaponClip(Turret, ++clip);
+		if (clip > MMCvars[MaxSMGAmmo].IntValue) 
+			SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
 	}
 };
 

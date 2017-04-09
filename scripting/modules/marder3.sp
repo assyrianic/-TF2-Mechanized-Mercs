@@ -9,7 +9,6 @@
 #define DESTROYER_SPEEDMAX		270.0
 #define DESTROYER_SPEEDMAXREVERSE	240.0
 #define DESTROYER_INITSPEED		50.0
-#define DESTROYER_MAXROCKETAMMO		500
 
 
 
@@ -35,8 +34,7 @@ methodmap CDestroyer < CTank
 		int buttons = GetClientButtons(this.index);
 		float vell[3];	GetEntPropVector(this.index, Prop_Data, "m_vecAbsVelocity", vell);
 		float currtime = GetGameTime();
-		if ( (buttons & IN_FORWARD) and vell[0] != 0.0 and vell[1] != 0.0 )
-		{
+		if ( (buttons & IN_FORWARD) and vell[0] != 0.0 and vell[1] != 0.0 ) {
 			StopSound(this.index, SNDCHAN_AUTO, TankIdle);
 
 			this.flSpeed += DESTROYER_ACCELERATION; /*simulates vehicular physics; not as good as Valve does with vehicle entities though*/
@@ -53,8 +51,7 @@ methodmap CDestroyer < CTank
 			if (bGasPowered.BoolValue)
 				this.DrainGas(0.1);
 		}
-		else if ( (buttons & IN_BACK) and vell[0] != 0.0 and vell[1] != 0.0 )
-		{
+		else if ( (buttons & IN_BACK) and vell[0] != 0.0 and vell[1] != 0.0 ) {
 			StopSound(this.index, SNDCHAN_AUTO, TankIdle);
 
 			this.flSpeed += DESTROYER_ACCELERATION;
@@ -131,7 +128,7 @@ methodmap CDestroyer < CTank
 		AcceptEntityInput(this.index, "SetCustomModel");
 		//SetEntProp(this.index, Prop_Send, "m_bUseClassAnimations", 1);
 		SetEntProp(this.index, Prop_Send, "m_bCustomModelRotates", 1); 
-		//SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.25);
+		SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
 	}
 	public void Equip ()
 	{
@@ -146,13 +143,11 @@ methodmap CDestroyer < CTank
 		int maxhp = GetEntProp(this.index, Prop_Data, "m_iMaxHealth");
 
 		char attribs[150];
-		if (GamePlayMode.IntValue != GunGame)
-			Format( attribs, sizeof(attribs), "125 ; %i ; 400 ; 1.0 ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.2 ; 5 ; 3.0 ; 2 ; 3.8 ; 103 ; 3.636 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
-		else Format( attribs, sizeof(attribs), "26 ; %i ; 400 ; 1.0 ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.2 ; 5 ; 3.0 ; 2 ; 3.8 ; 103 ; 3.636 ; 68 ; -1.0", (MMCvars[Marder3HP].IntValue-maxhp) );
+		Format( attribs, sizeof(attribs), "125 ; %i ; 400 ; 1.0 ; 326 ; 0.0 ; 252 ; 0.0 ; 37 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.2 ; 5 ; 3.0 ; 2 ; 3.8 ; 103 ; 3.636 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
 
 		int Turret = this.SpawnWeapon("tf_weapon_rocketlauncher_directhit", 127, 1, 0, attribs);
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", Turret);
-		SetWeaponClip(Turret, DESTROYER_MAXROCKETAMMO);
+		SetWeaponClip(Turret, MMCvars[MaxRocketAmmo].IntValue);
 		SetWeaponAmmo(Turret, 0);
 		SetWeaponInvis(this.index, 0);
 	}
@@ -203,18 +198,18 @@ methodmap CDestroyer < CTank
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
 			}
 			int clip = GetWeaponClip(Turret);
-			if ( clip >= 0 and clip < DESTROYER_MAXROCKETAMMO ) {
+			if ( clip >= 0 and clip < MMCvars[MaxRocketAmmo].IntValue ) {
 				if (iCurrentMetal < repairamount)
 					repairamount = iCurrentMetal;
-				if ( (DESTROYER_MAXROCKETAMMO-clip < repairamount*mult) )
-					repairamount = RoundToCeil( float((DESTROYER_MAXROCKETAMMO-clip)/mult) );
+				if ( (MMCvars[MaxRocketAmmo].IntValue-clip < repairamount*mult) )
+					repairamount = RoundToCeil( float((MMCvars[MaxRocketAmmo].IntValue-clip)/mult) );
 
 				if (repairamount < 1 and iCurrentMetal > 0)
 					repairamount = 1;
 
 				SetWeaponClip(Turret, clip+repairamount*mult);
-				if (clip > DESTROYER_MAXROCKETAMMO) 
-					SetWeaponClip(Turret, DESTROYER_MAXROCKETAMMO);
+				if (clip > MMCvars[MaxRocketAmmo].IntValue) 
+					SetWeaponClip(Turret, MMCvars[MaxRocketAmmo].IntValue);
 
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
@@ -223,6 +218,18 @@ methodmap CDestroyer < CTank
 				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			else EmitSoundToClient(engie.index, "weapons/wrench_hit_build_fail.wav");
 		}
+	}
+	public void Heal()
+	{
+		//this.iHealth += 1;
+		//if (this.iHealth > MMCvars[Marder3HP].IntValue)
+		//	this.iHealth = MMCvars[Marder3HP].IntValue;
+		
+		int Turret = GetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon");
+		int clip = GetWeaponClip(Turret);
+		SetWeaponClip(Turret, ++clip);
+		if (clip > MMCvars[MaxRocketAmmo].IntValue) 
+			SetWeaponClip(Turret, MMCvars[MaxRocketAmmo].IntValue);
 	}
 };
 

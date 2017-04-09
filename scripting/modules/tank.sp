@@ -24,7 +24,7 @@ methodmap CTank < BaseVehicle
 {
 	public CTank(const int ind, bool uid = false)
 	{
-		return view_as<CTank>( BaseVehicle(ind, uid) );
+		return view_as< CTank >( BaseVehicle(ind, uid) );
 	}
 
 	property float flLastFire
@@ -37,6 +37,16 @@ methodmap CTank < BaseVehicle
 		public set( const float val )		//{ LastFire[ this.index ] = val; }
 		{
 			hFields[this.index].SetValue("flLastFire", val);
+		}
+	}
+	property int iRockets
+	{
+		public get() {				//{ return RightClickAmmo[ this.index ]; } {
+			int item; hFields[this.index].GetValue("iRockets", item);
+			return item;
+		}
+		public set( const int val ) {		//{ RightClickAmmo[ this.index ] = val; } {
+			hFields[this.index].SetValue("iRockets", val);
 		}
 	}
 
@@ -114,7 +124,7 @@ methodmap CTank < BaseVehicle
 
 		if ( (buttons & IN_ATTACK2) and this.bIsVehicle ) //MOUSE2 Rocket firing mechanic
 		{
-			if ( this.flLastFire < currtime ) {
+			if ( this.flLastFire < currtime and this.iRockets > 0 ) {
 				float vPosition[3], vAngles[3], vVec[3];
 				GetClientEyePosition(player, vPosition);
 				GetClientEyeAngles(player, vAngles);
@@ -134,7 +144,8 @@ methodmap CTank < BaseVehicle
 				EmitSoundToAll(snd, player, SNDCHAN_AUTO);
 				CreateTimer(1.0, Timer_ReloadTank, this.userid, TIMER_FLAG_NO_MAPCHANGE); //useless, only plays a 'reload' sound
 				this.flLastFire = currtime + 4.0;
-
+				this.iRockets -= 1;
+				
 				float PunchVec[3] = {100.0, 0.0, 90.0};
 				SetEntPropVector(player, Prop_Send, "m_vecPunchAngleVel", PunchVec);
 			}
@@ -147,7 +158,7 @@ methodmap CTank < BaseVehicle
 		SetVariantString(TankModel);
 		AcceptEntityInput(this.index, "SetCustomModel");
 		SetEntProp(this.index, Prop_Send, "m_bUseClassAnimations", 1);
-		/*SetEntPropFloat(client, Prop_Send, "m_flModelScale", 1.25);*/
+		SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
 	}
 
 	public void Death ()
@@ -176,15 +187,14 @@ methodmap CTank < BaseVehicle
 		TF2_RemoveAllWeapons(this.index);
 		int maxhp = GetEntProp(this.index, Prop_Data, "m_iMaxHealth");
 		char attribs[128];
-		if (GamePlayMode.IntValue != GunGame)
-			Format( attribs, sizeof(attribs), "400 ; 1.0 ; 125 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
-		else Format( attribs, sizeof(attribs), "400 ; 1.0 ; 26 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 68 ; -1.0", (MMCvars[Panzer4HP].IntValue-maxhp) );
+		Format( attribs, sizeof(attribs), "400 ; 1.0 ; 125 ; %i ; 6 ; 0.5 ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
 
 		int Turret = this.SpawnWeapon("tf_weapon_smg", 16, 1, 0, attribs);
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", Turret);
 		SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
 		SetWeaponAmmo(Turret, 0);
 		SetClientOverlay( this.index, "effects/combine_binocoverlay" );
+		this.iRockets = MMCvars[MaxRocketAmmo].IntValue;
 	}
 	public void DoEngieInteraction (BaseVehicle engie)
 	{
@@ -232,6 +242,10 @@ methodmap CTank < BaseVehicle
 				SetWeaponClip(Turret, clip+repairamount*mult);
 				if (clip > MMCvars[MaxSMGAmmo].IntValue) 
 					SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
+					
+				this.iRockets += repairamount*mult;
+				if( this.iRockets > MMCvars[MaxRocketAmmo].IntValue )
+					this.iRockets = MMCvars[MaxRocketAmmo].IntValue;
 
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
@@ -240,6 +254,22 @@ methodmap CTank < BaseVehicle
 				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			else EmitSoundToClient(engie.index, "weapons/wrench_hit_build_fail.wav");
 		}
+	}
+	public void Heal()
+	{
+		//this.iHealth += 1;
+		//if( this.iHealth > MMCvars[Panzer4HP].IntValue )
+		//	this.iHealth = MMCvars[Panzer4HP].IntValue;
+		
+		int Turret = GetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon");
+		int clip = GetWeaponClip(Turret);
+		SetWeaponClip(Turret, ++clip);
+		if( clip > MMCvars[MaxSMGAmmo].IntValue ) 
+			SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
+		
+		this.iRockets += 1;
+		if( this.iRockets > MMCvars[MaxRocketAmmo].IntValue )
+			this.iRockets = MMCvars[MaxRocketAmmo].IntValue;
 	}
 };
 

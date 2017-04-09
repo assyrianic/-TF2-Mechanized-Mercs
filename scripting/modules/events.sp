@@ -1,185 +1,98 @@
-
-
 public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!bEnabled.BoolValue)
+	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
 	//int client = GetClientOfUserId( event.GetInt("userid") );
 	BaseVehicle player = BaseVehicle(event.GetInt("userid"), true);
-	if ( player and IsClientInGame(player.index) ) {
+	if( player and IsClientInGame(player.index) ) {
 		int client = player.index;
 		SetVariantString(""); AcceptEntityInput(client, "SetCustomModel");
 		SetClientOverlay(client, "0");
 		//SetVariantString("0");
 		//AcceptEntityInput(client, "SetForcedTauntCam");
 
-		if ( IsBlueBlocked(client) or IsRedBlocked(client) )
+		if( IsBlueBlocked(client) or IsRedBlocked(client) )
 			return Plugin_Continue;
 
 		bool free = AllowFreeClasses.BoolValue;
 		int team = player.iTeam;
 		//bool unlocked = IsClassUnlocked(player);
-		switch (GamePlayMode.IntValue) {
-			case Normal: {
-				switch ( player.Class ) {
-					case TFClass_Scout: {
-						if ( (GarageFlags[team-2] & SUPPORTBUILT) or free ) {
-							player.iType = ArmoredCar;
-							player.bSetOnSpawn = true;
-						}
-						else {
-							CPrintToChat(client, "{red}[Mechanized Mercs] {white}Armored Car is currently locked, you need a Support Mainframe online to Unlock it.");
-							player.Class = GetRandomClass(team);
-							TF2_RegeneratePlayer(client);
-							//player.bSetOnSpawn = false;
-						}
-					}
-					case TFClass_Sniper: {
-						if ( (GarageFlags[team-2] & HEAVYBUILT) or free ) {
-							player.iType = Destroyer;
-							player.bSetOnSpawn = true;
-						}
-						else {
-							CPrintToChat(client, "{red}[Mechanized Mercs] {white}Marder 2 is currently locked, you need a Heavy Support Mainframe online to Unlock it.");
-							player.Class = GetRandomClass(team);
-							TF2_RegeneratePlayer(client);
-							//player.bSetOnSpawn = false;
-						}
-					}
-					case TFClass_DemoMan: {
-						if ( (GarageFlags[team-2] & OFFENSIVEBUILT) or free ) {
-							player.iType = Tank;
-							player.bSetOnSpawn = true;
-						}
-						else {
-							CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer IV is currently locked, you need an Offensive Mainframe online to Unlock it.");
-							player.Class = GetRandomClass(team);
-							TF2_RegeneratePlayer(client);
-							//player.bSetOnSpawn = false;
-						}
-					}
-					case TFClass_Medic: {
-						if ( (GarageFlags[team-2] & SUPPORTBUILT) or free ) {
-							player.iType = Ambulance;
-							player.bSetOnSpawn = true;
-						}
-						else {
-							CPrintToChat(client, "{red}[Mechanized Mercs] {white}Ambulance is currently locked, you need a Support Mainframe online to Unlock it.");
-							player.Class = GetRandomClass(team);
-							TF2_RegeneratePlayer(client);
-							//player.bSetOnSpawn = false;
-						}
-					}
-					case TFClass_Heavy: {
-						if ( (GarageFlags[team-2] & HEAVYBUILT) or free ) {
-							player.iType = KingPanzer;
-							player.bSetOnSpawn = true;
-						}
-						else {
-							CPrintToChat(client, "{red}[Mechanized Mercs] {white}Tiger II is currently locked, you need a Heavy Support Mainframe online to Unlock it.");
-							player.Class = GetRandomClass(team);
-							TF2_RegeneratePlayer(client);
-							//player.bSetOnSpawn = false;
-						}
-					}
-					case TFClass_Pyro: {
-						if ( (GarageFlags[team-2] & OFFENSIVEBUILT) or free ) {
-							player.iType = PanzerIII;
-							player.bSetOnSpawn = true;
-						}
-						else {
-							CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer II is currently locked, you need an Offensive Mainframe online to Unlock it.");
-							player.Class = GetRandomClass(team);
-							TF2_RegeneratePlayer(client);
-							//player.bSetOnSpawn = false;
-						}
-					}
-					
-					case TFClass_Soldier: {
-						player.bSetOnSpawn = false;
-						//if (!player.iSecWep or !IsValidEntity(player.iSecWep))
-						player.iSecWep = player.SpawnWeapon("tf_weapon_smg", 16, 1, 0, "4 ; 1.28 ; 78 ; 6.0 ; 106 ; 0.2");
-						int weprl = GetPlayerWeaponSlot(client, 0);
-						if ( weprl > MaxClients and IsValidEntity(weprl) ) {
-							int wepindex = GetEntProp(weprl, Prop_Send, "m_iItemDefinitionIndex");
-							//	Removed beggars bazooka, jumper, and cow mangler in order. Too game breaking.
-							if ( wepindex == 730 or wepindex == 237 or wepindex == 441 )
-							{
-								TF2_RemoveWeaponSlot(client, 0);
-								player.SpawnWeapon("tf_weapon_rocketlauncher", 18, 1, 0, "3 ; 0.2 ; 77 ; 0.5 ; 96 ; 2.0 ; 2 ; 1.5 ; 411 ; 3.0");
-							}
-						}
-					}
-					case TFClass_Spy: {
-						player.bSetOnSpawn = false;
-						TF2_RemoveAllWeapons(client);
-						player.SpawnWeapon("tf_weapon_revolver", 460, 1, 0, "106 ; 0.5 ; 26 ; 35");
-						player.SpawnWeapon("tf_weapon_pistol", 773, 1, 0, "78 ; 7.5");
-						player.SpawnWeapon("tf_weapon_shovel", 447, 1, 0, "1 ; 0.75 ; 251 ; 1.0 ; 264 ; 1.7 ; 263 ; 1.55 ; 68 ; 2.0");
+		if( player.Class == TFClass_Engineer )
+			CPrintToChat(client, "{red}[MechMercs] {white}You can build Vehicles Garages (!garage). Once the Garages are done building, you and your team can build vehicles (!vehicle)");
 
-						SetVariantString(OfficerModel);
-						AcceptEntityInput(client, "SetCustomModel");
-						SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
-						SetPawnTimer(_SetOfficerModel, 1.0, client);
-					}
-					case TFClass_Engineer: {
-						player.bSetOnSpawn = false;
-						//TF2_RemoveWeaponSlot(client, 1);
-						//if (!player.iSecWep or !IsValidEntity(player.iSecWep))
-						player.iSecWep = player.SpawnWeapon("tf_weapon_pipebomblauncher", 130, 1, 10, "1 ; 0.5 ; 89 ; -4.0 ; 120 ; 0.1 ; 4 ; 0.5 ; 727 ; 2.0 ; 121 ; 1.0 ; 119 ; 1.0 ; 670 ; 0.1");
-						//SpawnVehicleGarageMenu( client, -1 ) ;
-					}
+		switch( player.iType ) {
+			case -1: { player.bSetOnSpawn = false; }
+			case ArmoredCar, Ambulance: {
+				if( (GarageFlags[team-2] & SUPPORTBUILT) or free ) {
+					player.bSetOnSpawn = true;
 				}
-				player.HelpPanel();
-			}
-			case Powerup: {
-				player.iType = -1;
-				player.bSetOnSpawn = false;
-				CPrintToChat(client, "{red}[MechMercs] {white}You can build Vehicles (!vehicle), press RELOAD to drive them! Press JUMP to exit. Engies can build vehicles faster (uses metal)");
-			}
-			case GunGame: {
-				if (player.iVehicleKills < 5)
-					player.iType = ArmoredCar;
-				switch ( player.Class ) {
-					case TFClass_Engineer, TFClass_Spy, TFClass_Soldier, TFClass_Medic: {
-						if (player.iVehicleKills >= 10) {
-							if (player.iVehicleKills >= 30)
-								player.iType = KingPanzer;
-							else if (player.iVehicleKills >= 25)
-								player.iType = Destroyer;
-							else if (player.iVehicleKills >= 15)
-								player.iType = Tank;
-							else if (player.iVehicleKills >= 10)
-								player.iType = PanzerIII;
-						}
-					}
-					case TFClass_Heavy: {
-						if (player.iVehicleKills >= 30)
-							player.iType = KingPanzer;
-					}
-					case TFClass_Pyro: {
-						if (player.iVehicleKills >= 10)
-							player.iType = PanzerIII;
-					}
-					case TFClass_DemoMan: {
-						if (player.iVehicleKills >= 15)
-							player.iType = Tank;
-					}
-					case TFClass_Sniper: {
-						if (player.iVehicleKills >= 25)
-							player.iType = Destroyer;
-					}
-					case TFClass_Scout: player.iType = ArmoredCar;
+				else {
+					CPrintToChat(client, "{red}[Mechanized Mercs] {white}Armored Cars & Ambulances are currently locked, Please Build a Support Garage to Unlock them.");
+					//player.iType = -1;
+					player.bSetOnSpawn = false;
 				}
-				player.bSetOnSpawn = true;
-				if (player.iVehicleKills >= 5)
-					SpawnVehicleGarageMenu(client, -1);
+			}
+			case Tank, PanzerIII: {
+				if( (GarageFlags[team-2] & OFFENSIVEBUILT) or free ) {
+					player.bSetOnSpawn = true;
+				}
+				else {
+					CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer 4s and Panzer 2s are currently locked, Please Build an Offensive Garage to Unlock them.");
+					//player.iType = -1;
+					player.bSetOnSpawn = false;
+				}
+			}
+			case KingPanzer, Destroyer: {
+				if( (GarageFlags[team-2] & HEAVYBUILT) or free ) {
+					player.bSetOnSpawn = true;
+				}
+				else {
+					CPrintToChat(client, "{red}[Mechanized Mercs] {white}King Tigers & Marder 2 Tank Destroyers are currently locked, Please Build a Heavy Support Garage to Unlock them.");
+					//player.iType = -1;
+					player.bSetOnSpawn = false;
+				}
 			}
 		}
 		player.bIsVehicle = player.bSetOnSpawn;
-		if ( player.bIsVehicle )
+		if( player.bIsVehicle )
 			player.ConvertToVehicle();
+	}
+	return Plugin_Continue;
+}
+
+public Action PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+{
+	if( !bEnabled.BoolValue )
+		return Plugin_Continue;
+
+	//int client = GetClientOfUserId( event.GetInt("userid") );
+	BaseVehicle player = BaseVehicle(event.GetInt("userid"), true);
+	if( player and IsClientInGame(player.index) ) {
+		if( player.bIsVehicle ) {
+			int team = player.iTeam;
+			int garage;
+			switch( player.iType ) {
+				case -1: {}
+				case ArmoredCar, Ambulance: {
+					// tele to support garage
+					garage = manager.GetGarage(team, SUPPORTGARAGE);
+				}
+				case Tank, PanzerIII: {
+					// tele to offensive
+					garage = manager.GetGarage(team, OFFENSEGARAGE);
+				}
+				case KingPanzer, Destroyer: {
+					// tele to heavy
+					garage = manager.GetGarage(team, HEAVYGARAGE);
+				}
+			}
+			if( garage != 0 ) {
+				float vec_GarageLoc[3]; vec_GarageLoc = Vec_GetEntPropVector(garage, Prop_Data, "m_vecAbsOrigin");
+				vec_GarageLoc[2] += 5.0;
+				TeleportEntity(player.index, vec_GarageLoc, NULL_VECTOR, NULL_VECTOR);
+			}
+		}
 	}
 	return Plugin_Continue;
 }
@@ -234,25 +147,11 @@ public Action ObjectBuilt(Event event, const char[] name, bool dontBroadcast)
 	if (engie.Class == TFClass_Spy)
 		return Plugin_Continue;
 
-	int building = event.GetInt("index");
-	int flags = manager.GaragesBuilt(engie.iTeam);
-	int health=0;
-	switch (flags) {
-		//case 2, 4, 8: health=2;
-		case 6, 10, 12: health=300;
-		case 14: health=400;
-	}
-	if (health)
-		SetEntProp(building, Prop_Send, "m_iMaxHealth", health);
-
 	return Plugin_Continue;
 }
 
 public Action RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
-	if (GamePlayMode.IntValue)
-		return Plugin_Continue;
-
 	for (int team=0; team<2; ++team) {
 		for (int offset=0 ; offset<3 ; offset++) {
 			if (GarageRefs[team][offset] and IsValidEntity(EntRefToEntIndex(GarageRefs[team][offset])))
@@ -264,9 +163,31 @@ public Action RoundEnd(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-void _SetOfficerModel(const int x)
+void _SetOfficerModel(const int i)
 {
 	SetVariantString(OfficerModel);
-	AcceptEntityInput(x, "SetCustomModel");
-	SetEntProp(x, Prop_Send, "m_bUseClassAnimations", 1);
+	AcceptEntityInput(i, "SetCustomModel");
+	SetEntProp(i, Prop_Send, "m_bUseClassAnimations", 1);
+}
+
+public Action ObjectDeflected(Event event, const char[] name, bool dontBroadcast)
+{
+	if( !bEnabled.BoolValue )
+		return Plugin_Continue;
+
+	BaseVehicle airblaster = BaseVehicle( event.GetInt("userid"), true );
+	BaseVehicle airblasted = BaseVehicle( event.GetInt("ownerid"), true );
+	int weaponid = GetEventInt(event, "weaponid");
+	if( weaponid )		// number lower or higher than 0 is considered "true", learned that in C programming lol
+		return Plugin_Continue;
+
+	if( airblasted.bIsVehicle ) {
+		float Vel[3];
+		TeleportEntity(airblasted.index, NULL_VECTOR, NULL_VECTOR, Vel); // Stops knockback
+		TF2_RemoveCondition(airblasted.index, TFCond_Dazed); // Stops slowdown
+		SetEntPropVector(airblasted.index, Prop_Send, "m_vecPunchAngle", Vel);
+		SetEntPropVector(airblasted.index, Prop_Send, "m_vecPunchAngleVel", Vel); // Stops screen shake  
+	}
+
+	return Plugin_Continue;
 }

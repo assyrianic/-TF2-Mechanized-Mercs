@@ -26,7 +26,7 @@ float
 	GarageBuildTime[2][3]
 ;
 
-#define	MAX_CONSTRUCT_VEHICLES	5
+#define	MAX_CONSTRUCT_VEHICLES	10
 
 #define ENTREF		0
 #define VEHTYPE		1
@@ -36,8 +36,9 @@ float
 #define HEALTH		5
 #define PLYRHP		6
 #define MAXMETAL	7
+#define ROCKETS		8
 
-int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][8];
+int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][9];
 /* 0-red ; 1-blue */
 
 methodmap GameModeManager {
@@ -110,6 +111,19 @@ methodmap GameModeManager {
 		if (GarageRefs[index][HEAVYGARAGE] and IsValidEntity(this.GetGarage(index, HEAVYGARAGE)))
 			flag |= HEAVYBUILT;
 		return flag;
+	}
+	public bool IsNearGarage(const int client, const float dist)
+	{
+		int team = GetClientTeam(client);
+		float vecPlayerOrigin[3], vecGarageOrigin[3];
+		vecPlayerOrigin = Vec_GetEntPropVector(client, Prop_Data, "m_vecAbsOrigin");
+		for( int off=0 ; off<3 ; ++off ) {
+			int garage=this.GetGarage(team-2, off);
+			vecGarageOrigin = Vec_GetEntPropVector(garage, Prop_Data, "m_vecAbsOrigin");
+			if( GetVectorDistance(vecPlayerOrigin, vecGarageOrigin) <= dist )
+				return true;
+		}
+		return false;
 	}
 	public bool IsPowerupFull(const int team)
 	{

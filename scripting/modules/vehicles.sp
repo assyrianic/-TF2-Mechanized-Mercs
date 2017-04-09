@@ -12,7 +12,7 @@
 /*
 IDEAS
 
-Scout - Armored Car
+Scout - Armored Car - Cannon gets clipsize of 5, max ammo of 100, reload speed is 1 second
 Soldier - general infantry - give 4th wep slot
 Pyro - Light, Flamethrower Tank
 
@@ -52,16 +52,18 @@ IDEAS:
 ~gun game mode: everybody starts as armored car, earn kills to unlock the classes. Armored Car can capture, self-heal. Change the Panzer 3 flamethrower to something else for this mode.
 -be able to exit free build vehicles
 
-1 - support vehicles - builds the fastest
-~Armored Car - 2-3 hits
-~Medical Vehicle - 1-2 hits
+Spy tank interaction
+if spy stabs tank
+	tank takes 100 dmg,
+	glow for 15 seconds,
+	and is marked for death for 15 seconds
+If marked for death, increase damage taken by 2x
 
-2 - offense vehicles
-~Light Tank - 3-4 hits
-~Panzer 4 Tank - 4-5 hits
+only allow vehicles to be built near a garage
+*/
 
-3 - heavy support vehicles - builds the slowest
-~King Tiger II tank - 5-6 hits
-~Tank Destroyer - 2-3 hits
-
+/*
+encourage custom maps
+make tanks larger
+make garages act as vehicle spawn points
 */

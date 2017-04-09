@@ -44,33 +44,19 @@ methodmap BaseFighter {		/* the methodmap for all 'classes' */
 	/* [ P R O P E R T I E S ] */
 
 	property int userid {
-		public get()				{ return view_as<int>(this); }
+		public get()				{ return view_as< int >(this); }
 	}
 	property int index {
-		public get()				{ return GetClientOfUserId( view_as<int>(this) ); }
+		public get()				{ return GetClientOfUserId( view_as< int >(this) ); }
 	}
 
-	property int iSecWep		/* automatically converts between entity indexes and references */
-	{
-		public get()
-		{
-			int item; hFields[this.index].GetValue("iSecWep", item);
-			return EntRefToEntIndex( item );
-		}
-		public set( const int val )
-		{
-			hFields[this.index].SetValue("iSecWep", EntIndexToEntRef(val));
-		}
-	}
 	property int iVehicleKills
 	{
-		public get()
-		{
+		public get() {
 			int item; hFields[this.index].GetValue("iVehicleKills", item);
 			return item;
 		}
-		public set( const int val )
-		{
+		public set( const int val ) {
 			hFields[this.index].SetValue("iVehicleKills", val);
 		}
 	}
@@ -83,23 +69,11 @@ methodmap BaseFighter {		/* the methodmap for all 'classes' */
 	{
 		public get()				{ return GetClientTeam(this.index); }
 	}
-	property bool bNearOfficer
-	{
-		public get()				//{ return ( IsNearOfficer[ this.index ] ); }
-		{
-			bool item; hFields[this.index].GetValue("bNearOfficer", item);
-			return item;
-		}
-		public set( const bool val )		//{ IsNearOfficer[ this.index ] = (val); }
-		{
-			hFields[this.index].SetValue("bNearOfficer", val);
-		}
-	}
 
 	public int SpawnWeapon (char[] name, const int index, const int level, const int qual, char[] att)
 	{
 		TF2Item hWep = new TF2Item(OVERRIDE_ALL|FORCE_GENERATION);
-		if ( !hWep )
+		if( !hWep )
 			return -1;
 
 		hWep.SetClassname(name);
@@ -109,10 +83,10 @@ methodmap BaseFighter {		/* the methodmap for all 'classes' */
 		char atts[32][32];
 		int count = ExplodeString(att, " ; ", atts, 32, 32);
 		count &= ~1;
-		if (count > 0) {
+		if( count > 0 ) {
 			hWep.iNumAttribs = count/2;
 			int i2 = 0;
-			for (int i=0; i < count; i += 2) {
+			for( int i=0 ; i < count ; i += 2 ) {
 				hWep.SetAttribute( i2, StringToInt(atts[i]), StringToFloat(atts[i+1]) );
 				i2++;
 			}
@@ -127,13 +101,13 @@ methodmap BaseFighter {		/* the methodmap for all 'classes' */
 
 	public void HelpPanel()
 	{
-		if ( IsVoteInProgress() )
+		if( IsVoteInProgress() )
 			return;
 
 		Panel panel = new Panel();
 		//SetGlobalTransTarget(this.index);
 		char helpstr[512];
-		switch (this.Class) {
+		switch( this.Class ) {
 			case TFClass_Scout:	helpstr = "Scout Car:\nSMG turret + 20mm Cannon.\nRight Click: 40 damage Cannon shot.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
 			case TFClass_Soldier:	helpstr = "Soldier:\nMouse3|Attack3 Button: Equip SMG\nVehicles take 2x Explosives Damage! Plan Ahead.\nRocket Launchers have\n\t-longer reload,\n\t-less clipsize,\n\t-less ammo,\n\t-less accuracy,\n\t-more damage.";
 			case TFClass_Pyro:	helpstr = "Panzer II:\nFlamethrower + Arcing Rocket cannon.\nRight Click: High Explosive 80 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
@@ -157,7 +131,7 @@ methodmap BaseFighter {		/* the methodmap for all 'classes' */
 
 public int HintPanel(Menu menu, MenuAction action, int param1, int param2)
 {
-	if ( !IsValidClient(param1) )
+	if( !IsValidClient(param1) )
 		return;
 	return;
 }
@@ -166,7 +140,7 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 {
 	public BaseVehicle(const int ind, bool uid=false)
 	{
-		return view_as<BaseVehicle>( BaseFighter(ind, uid) );
+		return view_as< BaseVehicle >( BaseFighter(ind, uid) );
 	}
 	///////////////////////////////
 
@@ -184,73 +158,51 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	*/
 	property int iHealth
 	{
-		public get()				//{ return Health[ this.index ]; }
-		{
+		public get() {				//{ return Health[ this.index ]; } {
 			int item; hFields[this.index].GetValue("iHealth", item);
 			return item;
 		}
-		public set( const int val )		//{ Health[ this.index ] = val; }
-		{
+		public set( const int val ) {		//{ Health[ this.index ] = val; } {
 			hFields[this.index].SetValue("iHealth", val);
 		}
 	}
 	property int iType
 	{
-		public get()				//{ return VehicleType[ this.index ]; }
-		{
+		public get() {				//{ return VehicleType[ this.index ]; } {
 			int item; hFields[this.index].GetValue("iType", item);
 			return item;
 		}
-		public set( const int val )		//{ VehicleType[ this.index ] = val; }
-		{
+		public set( const int val ) {		//{ VehicleType[ this.index ] = val; } {
 			hFields[this.index].SetValue("iType", val);
-		}
-	}
-	property int iRockets
-	{
-		public get()				//{ return RightClickAmmo[ this.index ]; }
-		{
-			int item; hFields[this.index].GetValue("iRockets", item);
-			return item;
-		}
-		public set( const int val )		//{ RightClickAmmo[ this.index ] = val; }
-		{
-			hFields[this.index].SetValue("iRockets", val);
 		}
 	}
 	property bool bIsVehicle
 	{
-		public get()				//{ return IsVehicle[ this.index ]; }
-		{
+		public get() {				//{ return IsVehicle[ this.index ]; } {
 			bool item; hFields[this.index].GetValue("bIsVehicle", item);
 			return item;
 		}
-		public set( const bool val )		//{ IsVehicle[ this.index ] = val; }
-		{
+		public set( const bool val ) {		//{ IsVehicle[ this.index ] = val; } {
 			hFields[this.index].SetValue("bIsVehicle", val);
 		}
 	}
 	property bool bSetOnSpawn
 	{
-		public get()				//{ return IsToSpawnAsVehicle[ this.index ]; }
-		{
+		public get() {				//{ return IsToSpawnAsVehicle[ this.index ]; } {
 			bool item; hFields[this.index].GetValue("bSetOnSpawn", item);
 			return item;
 		}
-		public set( const bool val )		//{ IsToSpawnAsVehicle[ this.index ] = val; }
-		{
+		public set( const bool val ) {		//{ IsToSpawnAsVehicle[ this.index ] = val; } {
 			hFields[this.index].SetValue("bSetOnSpawn", val);
 		}
 	}
 	property bool bHonkedHorn
 	{
-		public get()				//{ return HonkedHorn[ this.index ]; }
-		{
+		public get() {				//{ return HonkedHorn[ this.index ]; } {
 			bool item; hFields[this.index].GetValue("bHonkedHorn", item);
 			return item;
 		}
-		public set( const bool val )		//{ HonkedHorn[ this.index ] = val; }
-		{
+		public set( const bool val ) {		//{ HonkedHorn[ this.index ] = val; } {
 			hFields[this.index].SetValue("bHonkedHorn", val);
 		}
 	}
@@ -259,13 +211,11 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	****/
 	property float flGas
 	{
-		public get()				//{ return Gas[ this.index ]; }
-		{
+		public get() {				//{ return Gas[ this.index ]; } {
 			float item; hFields[this.index].GetValue("flGas", item);
 			return item;
 		}
-		public set( const float val )		//{ Gas[ this.index ] = val; }
-		{
+		public set( const float val ) {		//{ Gas[ this.index ] = val; } {
 			hFields[this.index].SetValue("flGas", val);
 		}
 	}
@@ -274,13 +224,11 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	****/
 	property float flSpeed
 	{
-		public get()				//{ return fSpeed[ this.index ]; }
-		{
+		public get() {				//{ return fSpeed[ this.index ]; } {
 			float item; hFields[this.index].GetValue("flSpeed", item);
 			return item;
 		}
-		public set( const float val )		//{ fSpeed[ this.index ] = val; }
-		{
+		public set( const float val ) {		//{ fSpeed[ this.index ] = val; } {
 			hFields[this.index].SetValue("flSpeed", val);
 		}
 	}
@@ -289,13 +237,11 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	****/
 	property float flSoundDelay
 	{
-		public get()				//{ return SoundDelay[ this.index ]; }
-		{
+		public get() {				//{ return SoundDelay[ this.index ]; } {
 			float item; hFields[this.index].GetValue("flSoundDelay", item);
 			return item;
 		}
-		public set( const float val )		//{ SoundDelay[ this.index ] = val; }
-		{
+		public set( const float val ) {		//{ SoundDelay[ this.index ] = val; } {
 			hFields[this.index].SetValue("flSoundDelay", val);
 		}
 	}
@@ -304,13 +250,11 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	****/
 	property float flIdleSound
 	{
-		public get()				//{ return IdleSound[ this.index ]; }
-		{
+		public get() {				//{ return IdleSound[ this.index ]; } {
 			float item; hFields[this.index].GetValue("flIdleSound", item);
 			return item;
 		}
-		public set( const float val )		//{ IdleSound[ this.index ] = val; }
-		{
+		public set( const float val ) {		//{ IdleSound[ this.index ] = val; } {
 			hFields[this.index].SetValue("flIdleSound", val);
 		}
 	}
@@ -329,6 +273,7 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		StopSound(this.index, SNDCHAN_AUTO, "acvshtank/tankdrive.mp3");
 		StopSound(this.index, SNDCHAN_AUTO, "armoredcar/idle.mp3");
 		StopSound(this.index, SNDCHAN_AUTO, "armoredcar/driveloop.mp3");
+		SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.0);
 		
 		//int health = GetEntProp(this.index, Prop_Data, "m_iMaxHealth");
 		//SetEntityHealth(this.index, health);
@@ -358,39 +303,39 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	}
 	public void UpdateGas ()
 	{
-		if ( IsClientObserver(this.index) )
+		if( IsClientObserver(this.index) )
 			return;
 
 		float x = HUDX.FloatValue, y = HUDY.FloatValue;
-		int rounder = RoundFloat( this.flGas );
-		if (rounder > 60) {
+		int gas_remaining = RoundFloat( this.flGas );
+		if( gas_remaining > 60 ) {
 			SetHudTextParams(x, y, 1.0, 0, 255, 0, 255);
-			ShowSyncHudText(this.index, hHudText, "Gas: %i", rounder);
+			ShowSyncHudText(this.index, hHudText, "Gas: %i", gas_remaining);
 		}
-		else if ( 30 < rounder < 60 ) {
+		else if( 30 < gas_remaining < 60 ) {
 			SetHudTextParams(x, y, 1.0, 255, 255, 0, 255);
-			ShowSyncHudText(this.index, hHudText, "Gas: %i", rounder);
+			ShowSyncHudText(this.index, hHudText, "Gas: %i", gas_remaining);
 		}
-		else if ( rounder < 30 ) {
+		else if( gas_remaining < 30 ) {
 			SetHudTextParams(x, y, 1.0, 255, 0, 0, 255);
-			ShowSyncHudText(this.index, hHudText, "Gas: %i", rounder);
+			ShowSyncHudText(this.index, hHudText, "Gas: %i", gas_remaining);
 		}
 	}
 	public void VehHelpPanel()
 	{
-		if ( IsVoteInProgress() )
+		if( IsVoteInProgress() )
 			return;
 
 		Panel panel = new Panel();
 		//SetGlobalTransTarget(this.index);
 		char helpstr[512];
-		switch ( this.iType ) {
-			case 0:		helpstr = "Panzer IV:\nSMG turret + Rocket cannon.\nRight Click: 100 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+		switch( this.iType ) {
+			case 0:	helpstr = "Panzer IV:\nSMG turret + Rocket cannon.\nRight Click: 100 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
 			case 1:	helpstr = "Scout Car:\nSMG turret + 20mm Cannon.\nRight Click: 40 damage Cannon shot.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
-			case 2:		helpstr = "Ambulance:\nSMG turret\nArea of Effect Healing 20ft|6m\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+			case 2:	helpstr = "Ambulance:\nSMG turret\nArea of Effect Healing 20ft|6m\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
 			case 4:	helpstr = "King Panzer:\nSMG turret + Rocket cannon.\nRight Click: 150 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
-			case 3:		helpstr = "Panzer II:\nFlamethrower + Arcing Rocket cannon.\nRight Click: High Explosive 80 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
-			case 5:		helpstr = "Marder II Tank Destroyer:\nRocket cannon.\nRight Click: Max. 700 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+			case 3:	helpstr = "Panzer II:\nFlamethrower + Arcing Rocket cannon.\nRight Click: High Explosive 80 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+			case 5:	helpstr = "Marder II Tank Destroyer:\nRocket cannon.\nRight Click: Max. 700 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
 		}
 		panel.SetTitle(helpstr);
 		panel.DrawItem( "Exit" );
@@ -399,4 +344,9 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	}
 };
 
-
+public void _RemoveGlow(const BaseVehicle car)
+{
+	if( !IsClientValid(car.index) )
+		return;
+	SetEntProp(car.index, Prop_Send, "m_bGlowEnabled", 0);
+}
