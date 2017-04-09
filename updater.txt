@@ -4,13 +4,19 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.3.0"
+			"Latest"	"1.5.0"
 		}
 		
-		"Notes"	"More info @ www.sourcemod.net. Changes in 1.3.0:"
-		"Notes"	"reduced reload penalty for rocket launchers"
-		"Notes"	"attempted bugfix of teammate vehicles somehow blocking objective capturing"
-		"Notes"	"blocked vehicles from being able to take intel in ctf maps"
+		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.5.0:"
+		"Notes"	"Removed GunGame mode"
+		"Notes"	"Merged Free Build and Build Up mode together"
+		"Notes"	"Added limited ammo to vehicles with main guns"
+		"Notes"	"kept normal classes unlocked while vehicles still require mainframes/garages"
+		"Notes"	"Dispensers can rearm tanks now"
+		"Notes"	"made engineer's building menu more dynamic"
+		"Notes"	"permanently changed Panzer 2 to use an SMG instead of flamethrower"
+		"Notes"	"backstabbing vehicles force them to take extra damage and have a glow everybody can see"
+		"Notes" "Vehicles are now bigger than usual"
 	}
 	
 	"Files"
