@@ -600,6 +600,7 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 		return Plugin_Handled;
 	}
 	int team = GetClientTeam(client);
+	bool free = AllowFreeClasses.BoolValue;
 	if( BaseFighter(client).Class == TFClass_Engineer ) {
 		Menu bases = new Menu( MenuHandler_BuildGarage );
 		
@@ -625,15 +626,15 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 	}
 	else {
 		Menu bases = new Menu( MenuHandler_BuildGarage );
-		if( GarageFlags[team-2] & SUPPORTBUILT ) {
+		if( (GarageFlags[team-2] & SUPPORTBUILT) or free ) {
 			bases.AddItem("11", "Armored Car: Machinegun & 20mm Cannon");
 			bases.AddItem("12", "Ambulance: Self Defense Machinegun");
 		}
-		if( GarageFlags[team-2] & OFFENSIVEBUILT ) {
+		if( (GarageFlags[team-2] & OFFENSIVEBUILT) or free ) {
 			bases.AddItem("13", "Panzer 2: Machinegun & Arcing, HE Rockets");
 			bases.AddItem("10", "Panzer 4: Machinegun & Rockets");
 		}
-		if( GarageFlags[team-2] & HEAVYBUILT ) {
+		if( (GarageFlags[team-2] & HEAVYBUILT) or free ) {
 			bases.AddItem("14", "Tiger 2 King Panzer: Machinegun, Rockets, Lotsa Health");
 			bases.AddItem("15", "Marder 2 AT: Armor Piercing Rockets");
 		}

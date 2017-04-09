@@ -29,7 +29,7 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 				}
 				else {
 					CPrintToChat(client, "{red}[Mechanized Mercs] {white}Armored Cars & Ambulances are currently locked, Please Build a Support Garage to Unlock them.");
-					//player.iType = -1;
+					player.iType = -1;
 					player.bSetOnSpawn = false;
 				}
 			}
@@ -39,7 +39,7 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 				}
 				else {
 					CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer 4s and Panzer 2s are currently locked, Please Build an Offensive Garage to Unlock them.");
-					//player.iType = -1;
+					player.iType = -1;
 					player.bSetOnSpawn = false;
 				}
 			}
@@ -49,7 +49,7 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 				}
 				else {
 					CPrintToChat(client, "{red}[Mechanized Mercs] {white}King Tigers & Marder 2 Tank Destroyers are currently locked, Please Build a Heavy Support Garage to Unlock them.");
-					//player.iType = -1;
+					player.iType = -1;
 					player.bSetOnSpawn = false;
 				}
 			}

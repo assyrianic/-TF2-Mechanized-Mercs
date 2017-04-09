@@ -153,7 +153,7 @@ methodmap CKingTank < CTank
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", Turret);
 		SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
 		SetWeaponAmmo(Turret, 0);
-		SetClientOverlay( this.index, "effects/combine_binocoverlay" );
+		//SetClientOverlay( this.index, "effects/combine_binocoverlay" );
 		this.iRockets = MMCvars[MaxRocketAmmo].IntValue;
 	}
 	public void DoEngieInteraction (BaseVehicle engie)
