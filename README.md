@@ -7,35 +7,29 @@ vehicle mod for team fortress 2.
   * moving towards something in the direction of your movement can deal damage (roadkilling)
   * fixable by engineer wrenches (costs metal)
   * engineers fixes replenishes ammo and health
-  * dispensers and mediguns replenish gas/fuel
+  * dispensers and mediguns replenish ammo and gas/fuel
   * honkable horns (mouse3/attack3)
-
-##Features##
-This mod includes 3 different gameplay modes.
-
-Mode #1:
-  Map starts out with 3 classes: Engineer, Soldier, and Officer (Spy). Vehicle classes are locked. Engineers must build vehicle constructs called mainframes to unlock vehicles. Each mainframe unlocks two different vehicles classes, each different in strengths and weakenesses.
   
-  The 3 mainframes are:
-    Support mainframe - unlocks Armored Car and Ambulance
-    Offensive mainframe - unlocks Medium and Light tanks
-    Heavy Support mainframe - unlocks King Tiger tank and the Marder 2 Tank Destroyer.
 
-Each mainframe costs 200 metal to build.
-The mainframes are buildable, destroyable, and fixable.
-The mainframes can also be hit by wrenches to increase their build times.
-The Officer class can aid in building the mainframes using their melee Whip.
+Mod Explanation:
+  At the beginning of the map, vehicle classes are locked. Engineers must build vehicle garages to unlock the vehicles. Each garage unlocks two different vehicles classes, each different in strengths and weakenesses.
+  
+  The 3 garage are:
+    Support garage - unlocks Armored Car and Ambulance
+    Offensive garage - unlocks Medium and Light tanks
+    Heavy Support garage - unlocks King Tiger tank and the Marder 2 Tank Destroyer.
 
-Mode #2:
-  This mode is pretty much gun game but with vehicles.
-  You start off as an Armored Car and must kill other vehicles to become more powerful vehicles.
-  Difference in this mode is that there are no human classes, ambulance is locked, and that Armored Car has an unlocked ability to regenerate health and the ability to capture objectives, thus making them always valuable.
+Each garage costs 200 metal to build.
+The garage are buildable, destroyable, and fixable.
+The garage can be hit by wrenches to increase their build times.
 
-Mode #3:
-  This mode is normal, unmodified team fortress 2 with the exception that players of any class can BUILD Vehicles instead of building mainframes and unlocking them.
-  
-  Players can build Vehicle constructs which require metal to build up. non-Engie players can upgrade the metal requirement but they do it slowly, only Engineers can upgrade at normal rate.
-  
-  Each more powerful vehicle requires more metal than the last to build. Once the construct has enough metal required to run, a player can jump or touch the construct and press the Reload button to become the vehicle! To exit the vehicle, press the Jump button.
-  
-  After becoming a vehicle, you're subject to whatever the vehicle can do and what can be applied to the vehicle.
+Once a garage is built and fully online, ALL classes can build vehicle constructs! You are required to be near the respective garage of the vehicle construct. Once the vehicle construct is created, you must build it!
+
+non-Engies can simply melee the vehicle construct and metal will be applied but it's slower than Engineers. Engineer's can build up constructs faster but it will drain their metal on each hit.
+
+Once a vehicle construct is ready, simply hop on it (literally) and press reload. To get out of the vehicle, you press jump.
+
+When you die as a vehicle, you will respawn as the same vehicle u died as. You will keep respawning as a vehicle UNTIL the garage required to build your vehicle is destroyed.
+
+Vehicles take completely normal damage, they have no weaknesses or resistances.
+Getting backstabbed as a tank will result in you taking 50 damage, having an outline for 15 seconds, and you take 2x damage for 15 seconds!
