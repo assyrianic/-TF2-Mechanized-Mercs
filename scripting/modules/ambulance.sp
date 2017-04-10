@@ -128,9 +128,8 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 	public void Equip ()
 	{
 		int ent = -1;
-		while ( (ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1 )
-		{
-			if (GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == this.index)
+		while( (ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1 ) {
+			if( GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == this.index )
 				AcceptEntityInput(ent, "Kill");
 		}
 
@@ -138,7 +137,7 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 		int maxhp = GetEntProp(this.index, Prop_Data, "m_iMaxHealth");
 
 		char attribs[128];
-		Format( attribs, sizeof(attribs), "400 ; 1.0 ; 125 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 100 ; 0.01 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
+		Format( attribs, sizeof(attribs), "400 ; 1.0 ; 125 ; %i ; 326 ; 0.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 53 ; 1 ; 59 ; 0.0 ; 60 ; 0.01 ; 68 ; %f", (1-maxhp), (this.Class == TFClass_Scout) ? -2.0 : -1.0 );
 
 		int Turret = this.SpawnWeapon("tf_weapon_smg", 16, 1, 0, attribs);
 		SetEntPropEnt(this.index, Prop_Send, "m_hActiveWeapon", Turret);
@@ -187,11 +186,20 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 
 				SetWeaponClip(Turret, clip+repairamount*mult);
 
-				if (clip > MMCvars[MaxSMGAmmo].IntValue) 
+				if (GetWeaponClip(Turret) > MMCvars[MaxSMGAmmo].IntValue)
 					SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
 
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
+			}
+			if( this.bHasGunner ) {
+				int gunner = this.hGunner.index;
+				int gunner_turret = GetEntPropEnt(gunner, Prop_Send, "m_hActiveWeapon");
+				int gunner_clip = GetWeaponClip(gunner_turret);
+				if( gunner_clip < MMCvars[MaxGunnerAmmo].IntValue )
+					SetWeaponClip(gunner_turret, gunner_clip+repairamount*mult);
+				if( GetWeaponClip(gunner_turret) > MMCvars[MaxGunnerAmmo].IntValue )
+					SetWeaponClip(gunner_turret, MMCvars[MaxGunnerAmmo].IntValue);
 			}
 			if (repairamount)
 				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
@@ -210,6 +218,16 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 		SetWeaponClip(Turret, ++clip);
 		if (clip > MMCvars[MaxSMGAmmo].IntValue) 
 			SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
+		
+		if( this.bHasGunner ) {
+			int gunner = this.hGunner.index;
+			int gunner_turret = GetEntPropEnt(gunner, Prop_Send, "m_hActiveWeapon");
+			int gunner_clip = GetWeaponClip(gunner_turret);
+			if( gunner_clip < MMCvars[MaxGunnerAmmo].IntValue )
+				SetWeaponClip(gunner_turret, ++gunner_clip);
+			if( GetWeaponClip(gunner_turret) > MMCvars[MaxGunnerAmmo].IntValue )
+				SetWeaponClip(gunner_turret, MMCvars[MaxGunnerAmmo].IntValue);
+		}
 	}
 };
 

@@ -50,14 +50,14 @@ methodmap BaseFighter {		/* the methodmap for all 'classes' */
 		public get()				{ return GetClientOfUserId( view_as< int >(this) ); }
 	}
 
-	property int iVehicleKills
+	property bool bIsGunner
 	{
 		public get() {
-			int item; hFields[this.index].GetValue("iVehicleKills", item);
+			bool item; hFields[this.index].GetValue("bIsGunner", item);
 			return item;
 		}
-		public set( const int val ) {
-			hFields[this.index].SetValue("iVehicleKills", val);
+		public set( const bool val ) {
+			hFields[this.index].SetValue("bIsGunner", val);
 		}
 	}
 	property TFClassType Class	/* automatically converts between entity indexes and references */
@@ -259,6 +259,26 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		}
 	}
 
+	property bool bHasGunner	// vehicle has gunner
+	{
+		public get() {
+			bool item; hFields[this.index].GetValue("bHasGunner", item);
+			return item;
+		}
+		public set( const bool val ) {
+			hFields[this.index].SetValue("bHasGunner", val);
+		}
+	}
+	property BaseFighter hGunner	// gunner's userid
+	{
+		public get() {
+			BaseFighter item; hFields[this.index].GetValue("hGunner", item);
+			return item;
+		}
+		public set( const BaseFighter val ) {
+			hFields[this.index].SetValue("hGunner", val);
+		}
+	}
 
 	/****
 		Purpose: revert the vehicle back to a normal player
@@ -321,7 +341,7 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 			ShowSyncHudText(this.index, hHudText, "Gas: %i", gas_remaining);
 		}
 	}
-	public void VehHelpPanel()
+	public void VehHelpPanel ()
 	{
 		if( IsVoteInProgress() )
 			return;
@@ -330,17 +350,124 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		//SetGlobalTransTarget(this.index);
 		char helpstr[512];
 		switch( this.iType ) {
-			case 0:	helpstr = "Panzer IV:\nSMG turret + Rocket cannon.\nRight Click: 100 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
-			case 1:	helpstr = "Scout Car:\nSMG turret + 20mm Cannon.\nRight Click: 40 damage Cannon shot.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+			case 0:	helpstr = "Panzer IV:\nSMG turret + Rocket Cannon.\nRight Click: Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+			case 1:	helpstr = "Scout Car:\nSMG turret + 20mm Cannon.\nRight Click: 20mm Cannon.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
 			case 2:	helpstr = "Ambulance:\nSMG turret\nArea of Effect Healing 20ft|6m\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
-			case 4:	helpstr = "King Panzer:\nSMG turret + Rocket cannon.\nRight Click: 150 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
-			case 3:	helpstr = "Panzer II:\nFlamethrower + Arcing Rocket cannon.\nRight Click: High Explosive 80 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
-			case 5:	helpstr = "Marder II Tank Destroyer:\nRocket cannon.\nRight Click: Max. 700 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+			case 4:	helpstr = "King Panzer:\nSMG turret + Rocket Cannon.\nRight Click: Nuclear Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+			case 3:	helpstr = "Panzer II:\nSMG Turret + Howitzer Cannon.\nRight Click: Arcing, Hi-Explosive Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
+			case 5:	helpstr = "Marder II Tank Destroyer:\nRocket Cannon.\nLeft Click: Max. 700 damage Rocket.\nGo near friendly Engineers to heal and re-arm you!\nMouse3/Attack3: Honk horn.";
 		}
 		panel.SetTitle(helpstr);
 		panel.DrawItem( "Exit" );
 		panel.Send(this.index, HintPanel, 30);
 		delete (panel);
+	}
+	public void SetUpGunner (const BaseVehicle gunner)
+	{
+		// we already have a gunner, 1 is enough.
+		if( this.bHasGunner )
+			return;
+		
+		// need valid gunner!
+		if( gunner.index <= 0 )
+			return;
+		
+		// prevent vehicles from becoming gunners or else tankception :).
+		if( gunner.bIsVehicle )
+			return;
+		
+		this.bHasGunner = true;
+		this.hGunner = gunner;
+		
+		// remove stuff and set up for secondary gunner's SMG
+		int ent = -1;
+		while( (ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1 ) {
+			if( GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == gunner.index )
+				AcceptEntityInput(ent, "Kill");
+		}
+		
+		TF2_RemoveAllWeapons(gunner.index);
+		char attribs[64];
+		Format( attribs, sizeof(attribs), "400 ; 1.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 100 ; 0.01 ; 68 ; %f", (gunner.Class == TFClass_Scout) ? -2.0 : -1.0 );
+		int secnd_turret = gunner.SpawnWeapon("tf_weapon_smg", 16, 1, 0, attribs);
+		SetEntPropEnt(gunner.index, Prop_Send, "m_hActiveWeapon", secnd_turret);
+		SetWeaponClip(secnd_turret, MMCvars[MaxGunnerAmmo].IntValue);
+		SetWeaponAmmo(secnd_turret, 0);
+		
+		// gunner equipped, let's affirm their gunner status and move them to the top of the weapon.
+		gunner.bIsGunner = true;
+		
+		float thisOrigin[3]; GetClientAbsOrigin(this.index, thisOrigin);
+		thisOrigin[2] += 50.0;
+		TeleportEntity(gunner.index, thisOrigin, NULL_VECTOR, NULL_VECTOR);
+	}
+	public void RemoveGunner ()
+	{
+		// removing a gunner that doesn't exist?
+		if( !this.bHasGunner )
+			return;
+		
+		// We're gonna regenerate our ex-gunner but without resetting health.
+		int gunner = this.hGunner.index;
+		
+		// get gunner's hp
+		int gunner_hp = GetClientHealth(gunner);
+		TF2_RemoveAllWeapons(gunner);
+		// regenerate gunner and set hp back
+		TF2_RegeneratePlayer(gunner);
+		SetEntityHealth(gunner, gunner_hp);
+		
+		this.hGunner.bIsGunner = false;
+		this.hGunner = view_as< BaseFighter >(0);
+		this.bHasGunner = false;
+		
+		float playerVel[3]; playerVel[0] = playerVel[1] = playerVel[2] = 0.0;
+		TeleportEntity(gunner, NULL_VECTOR, NULL_VECTOR, playerVel);
+	}
+	public void UpdateGunner()
+	{
+		if( !this.bHasGunner )
+			return;
+		
+		// vehicle supposedly has a gunner but hGunner was some how not set?
+		else if( !this.hGunner ) {
+			this.bHasGunner = false;
+			return;
+		}
+		
+		// we have a registered gunner but doesn't exist, erase the gunner registration
+		else if( this.hGunner.index <= 0 ) {
+			this.hGunner = view_as< BaseFighter >(0);
+			this.bHasGunner = false;
+			return;
+		}
+		
+		// If gunner died, we no longer have a gunner do we?
+		else if( !IsPlayerAlive(this.hGunner.index) ) {
+			this.hGunner.bIsGunner = false;
+			this.hGunner = view_as< BaseFighter >(0);
+			this.bHasGunner = false;
+			return;
+		}
+		
+		int gunner = this.hGunner.index;
+		if ( (GetClientButtons(gunner) & IN_JUMP) ) {
+			this.RemoveGunner();
+			return;
+		}
+		
+		int driver = this.index;
+		float thisVel[3]; GetEntPropVector(driver, Prop_Data, "m_vecAbsVelocity", thisVel);
+
+		float thisOrigin[3], plyrOrigin[3];
+		GetClientAbsOrigin(driver, thisOrigin);
+		GetClientAbsOrigin(gunner, plyrOrigin);
+
+		if (GetVectorDistance(thisOrigin, plyrOrigin, false) > 10.0) {
+			thisOrigin[2] += 50.0;
+			TeleportEntity(gunner, thisOrigin, NULL_VECTOR, thisVel);
+		}
+		else TeleportEntity(gunner, NULL_VECTOR, NULL_VECTOR, thisVel);
 	}
 };
 

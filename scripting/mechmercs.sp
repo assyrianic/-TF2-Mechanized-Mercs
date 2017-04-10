@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.5.0"
+#define PLUGIN_VERSION		"1.6.0"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -70,6 +70,7 @@ enum {
 	ArmoredCarGunDmg,
 	MaxSMGAmmo,
 	MaxRocketAmmo,
+	MaxGunnerAmmo,
 	RocketSpeed,
 	AdvertTime,
 	ReplacePowerups,
@@ -192,7 +193,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_mmhelp",		GameInfoCmd);
 	RegConsoleCmd("sm_mminfo",		GameInfoCmd);
 
-	//RegAdminCmd("sm_forcevehicle",	ForcePlayerVehicle, ADMFLAG_ROOT);
+	RegAdminCmd("sm_forcevehicle",		ForcePlayerVehicle, ADMFLAG_KICK);
 	RegAdminCmd("sm_reloadvehiclecfg",	CmdReloadCFG, ADMFLAG_GENERIC);
 
 #if defined RESPAWNER
@@ -243,6 +244,8 @@ public void OnPluginStart()
 	MMCvars[MaxSMGAmmo] = CreateConVar("mechmercs_sidearm_ammo", "1000", "how much ammo each vehicle's sidearm (SMG or other) gets.", FCVAR_NONE, true, 0.0, true, 99999.0);
 	
 	MMCvars[MaxRocketAmmo] = CreateConVar("mechmercs_maingun_ammo", "50", "how much ammo each vehicle's rocket turret gets.", FCVAR_NONE, true, 0.0, true, 99999.0);
+	
+	MMCvars[MaxGunnerAmmo] = CreateConVar("mechmercs_secgunner_ammo", "1000", "how much ammo each vehicle's secondary gunner gets.", FCVAR_NONE, true, 0.0, true, 99999.0);
 	
 	MMCvars[VehicleConstructHP] = CreateConVar("mechmercs_constructhp", "500", "how much max health vehicle constructs get", FCVAR_NONE, true, 1.0, true, 99999.0);
 	
@@ -368,13 +371,15 @@ public void OnClientPutInServer(int client)
 	user.bIsVehicle = false;
 	user.bSetOnSpawn = false;
 	user.iType = -1;
-	user.iVehicleKills = 0;
+	user.bIsGunner = false;
 	user.iHealth = 0;
 	user.bHonkedHorn=false;
 	user.flGas=0.0;
 	user.flSpeed=0.0;
 	user.flSoundDelay=0.0;
 	user.flIdleSound=0.0;
+	user.bHasGunner = false;
+	user.hGunner = view_as< BaseFighter >(0);
 
 	ManageConnect(client);	// in handler.sp
 }
@@ -939,7 +944,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 			/*
 			TR_TraceRayFilter( flEyePos, flAng, MASK_PLAYERSOLID, RayType_Infinite, TraceFilterIgnorePlayers, client );
 
-			if ( TR_GetFraction() < 1.0 ) {
+			if( TR_GetFraction() < 1.0 ) {
 				float flEndPos[3]; TR_GetEndPosition(flEndPos);
 			*/
 			GetClientAbsAngles(client, flAng); //flAng[1] += 90.0;
@@ -1021,7 +1026,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 				SDKHook(pStruct, SDKHook_OnTakeDamage, OnGarageTakeDamage);
 				//SDKHook(pStruct, SDKHook_ShouldCollide, OnGarageCollide);
 				int _collision_projectile_flag = 13;
-				int _collision_weapon_flag = 11;
+				//int _collision_weapon_flag = 11;
 				SetEntProp(pStruct, Prop_Data, "m_CollisionGroup", _collision_projectile_flag);
 				SetEntProp(pStruct, Prop_Send, "m_CollisionGroup", _collision_projectile_flag);
 			
@@ -1347,6 +1352,9 @@ public void OnPreThink(int client)
 	if( player.bIsVehicle ) {
 		int team = GetClientTeam(client);
 		if( (GetClientButtons(client) & IN_JUMP) and (GetEntityFlags(client) & FL_ONGROUND) ) {
+			if( player.bHasGunner )
+				player.RemoveGunner();
+
 			// record vehicle info so we can recreate our vehicle construct as ready to use
 			float vec_origin[3]; GetClientAbsOrigin(client, vec_origin);
 			//vec_origin[2] += 10.0;
@@ -1378,25 +1386,52 @@ public void OnPreThink(int client)
 			ManageVehicleNearDispenser(player); // in handler.sp
 		
 		for( int i=MaxClients ; i ; --i ) {
-			if( !IsValidClient(i, false) )
+			if( !IsClientValid(i) )
 				continue;
 
 			else if( client == GetHealingTarget(i) )
 				ManageVehicleMedigunHeal(player, BaseVehicle(i)); // in handler.sp
 		}
 	}
+	else {
+		// self isn't taken yet!
+		BaseVehicle vehicle;
+		for( int i=MaxClients ; i ; --i ) {
+			if( !IsClientValid(i) )
+				continue;
+			else if( !IsPlayerAlive(i) )
+				continue;
+			else if( i==client or GetClientTeam(i) != GetClientTeam(client) )
+				continue;
+			
+			vehicle = BaseVehicle(i);
+			if( !vehicle.bIsVehicle )
+				continue;
+			
+			if( (vehicle.iType==Tank or vehicle.iType==ArmoredCar or vehicle.iType==PanzerIII or vehicle.iType==KingPanzer)
+			and IsInRange(client, vehicle.index, 100.0) ) {
+				SetHudTextParams(0.93, 0.80, 0.1, 0, 255, 255, 255);
+				if( !player.bIsGunner ) {
+					ShowSyncHudText(client, hHudText, "press RELOAD to become a mounted gunner!");
+					if( GetClientButtons(client) & IN_RELOAD )
+						vehicle.SetUpGunner(player);
+				}
+				else ShowSyncHudText(client, hHudText, "press JUMP to get off.");
+			}
+		}
+	}
 }
-public Action TraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
+public Action TraceAttack(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& ammotype, int hitbox, int hitgroup)
 {
-	if (!bEnabled.BoolValue)
+	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
-	if ( IsClientValid(attacker) and IsClientValid(victim) ) {
+	if( IsClientValid(attacker) and IsClientValid(victim) ) {
 		/* this is basically the same code from my Advanced armor plugin but with the difference of making it work for the vehicle classes */
-		if (GetClientTeam(attacker) == GetClientTeam(victim)) {
-			if (TF2_GetPlayerClass(attacker) == TFClass_Engineer
+		if( GetClientTeam(attacker) == GetClientTeam(victim) ) {
+			if( TF2_GetPlayerClass(attacker) == TFClass_Engineer
 				and HealthFromEngies.BoolValue
-				and BaseVehicle(victim).bIsVehicle) {
+				and BaseVehicle(victim).bIsVehicle ) {
 				//BaseVehicle fixer	= BaseVehicle(attacker);
 				//BaseVehicle player	= BaseVehicle(victim);
 				ManageVehicleEngieHit( BaseVehicle(victim), BaseVehicle(attacker) ); // in handler.sp
@@ -1407,9 +1442,9 @@ public Action TraceAttack(int victim, int &attacker, int &inflictor, float &dama
 }
 public Action OnTakeDamage(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (!bEnabled.BoolValue)
+	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
-	else if ( !IsValidClient(victim, false) )
+	else if( !IsValidClient(victim, false) )
 		return Plugin_Continue;
 
 	BaseVehicle vehVictim = BaseVehicle(victim);
@@ -1429,7 +1464,7 @@ public Action OnTakeDamage(int victim, int& attacker, int& inflictor, float& dam
 
 	return Plugin_Continue;
 }
-public Action OnGarageTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action OnGarageTakeDamage(int victim, int& attacker, int& inflictor, float &damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if( !IsValidClient(attacker) )
 		return Plugin_Continue;
@@ -2870,3 +2905,47 @@ bool CBaseObject::VerifyCorner( const Vector &vBottomCenter, float xOffset, floa
 	return !tr.startsolid && tr.fraction < 1;
 }
 */
+
+public Action ForcePlayerVehicle(int client, int args)
+{
+	if( !bEnabled.BoolValue )
+		return Plugin_Continue;
+	
+	if( args < 2 ) {
+		ReplyToCommand(client, "[TF2Vehicles] Usage: sm_forcevehicle <player/target> <vehicle id>");
+		return Plugin_Handled;
+	}
+	char name[PLATFORM_MAX_PATH]; GetCmdArg( 1, name, sizeof(name) );
+
+	char number[4]; GetCmdArg( 2, number, sizeof(number) );
+	int type = StringToInt(number);
+
+	if( type < 0 or type > 255 )
+		type = -1;
+
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[PLYR], target_count;
+	bool tn_is_ml;
+	if( (target_count = ProcessTargetString(name, client, target_list, MAXPLAYERS, COMMAND_FILTER_ALIVE, target_name, sizeof(target_name), tn_is_ml)) <= 0 ) {
+		/* This function replies to the admin with a failure message */
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
+
+	BaseVehicle veh;
+	for( int i=0 ; i<target_count ; ++i ) {
+		if( !IsValidClient(target_list[i], false) )
+			continue;
+		
+		veh = BaseVehicle(target_list[i]);
+		veh.bSetOnSpawn = false;
+		veh.bIsVehicle = true;
+		veh.iType = type;
+		veh.ConvertToVehicle();
+		veh.VehHelpPanel();
+				
+		PrintToChat(veh.index, "[MechMercs] An Admin has forced you on a Vehicle");
+		PrintToChat(client, "[MechMercs] You've force %N onto a Vehicle", target_list[i]);
+	}
+	return Plugin_Handled;
+}

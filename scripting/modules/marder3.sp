@@ -128,7 +128,7 @@ methodmap CDestroyer < CTank
 		AcceptEntityInput(this.index, "SetCustomModel");
 		//SetEntProp(this.index, Prop_Send, "m_bUseClassAnimations", 1);
 		SetEntProp(this.index, Prop_Send, "m_bCustomModelRotates", 1); 
-		SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
+		//SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
 	}
 	public void Equip ()
 	{

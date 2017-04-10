@@ -99,23 +99,25 @@ public Action PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 public Action PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!bEnabled.BoolValue)
+	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
 	BaseVehicle player = BaseVehicle(event.GetInt("userid"), true);
+	BaseVehicle fighter = BaseVehicle(event.GetInt("attacker"), true);
 
-	if (player.bIsVehicle) { // if victim is a vehicle, kill him off and remove overlay
+	if( player.bIsVehicle ) { // if victim is a vehicle, kill him off and remove overlay
+		if( player.bHasGunner ) {
+			SDKHooks_TakeDamage(player.hGunner.index, event.GetInt("inflictor_entindex"), fighter.index, GetClientHealth(player.hGunner.index)+1.0, event.GetInt("damagebits"));
+			//PrintToConsole
+			player.RemoveGunner();
+		}
 		CreateTimer(0.1, Timer_VehicleDeath, player.userid);
 		ManageVehicleDeath(player);
 	}
 
-	BaseVehicle fighter = BaseVehicle(event.GetInt("attacker"), true);
-	if (fighter.bIsVehicle and !player.bIsVehicle) //if vehicle is killer and victim is not a vehicle, check if player was crushed
+	if( fighter.bIsVehicle and !player.bIsVehicle ) //if vehicle is killer and victim is not a vehicle, check if player was crushed
 		ManageVehicleKillPlayer(fighter, player, event);
-	if (player.bIsVehicle) {
-		fighter.iVehicleKills++;
-		//player.iVehicleKills = 0;
-	}
+
 	//if (fighter.bIsVehicle and player.bIsVehicle) //clash of the titans - when both killer and victim are Vehicles
 
 	return Plugin_Continue;
@@ -123,7 +125,7 @@ public Action PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 
 public Action PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!bEnabled.BoolValue)
+	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
 	BaseVehicle player = BaseVehicle(event.GetInt("userid"), true);
@@ -140,7 +142,7 @@ public Action PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 public Action ObjectBuilt(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!bEnabled.BoolValue)
+	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
 	BaseVehicle engie = BaseVehicle(event.GetInt("userid"), true);
@@ -162,20 +164,20 @@ public Action RoundEnd(Event event, const char[] name, bool dontBroadcast)
 	}
 	return Plugin_Continue;
 }
-
+/*
 void _SetOfficerModel(const int i)
 {
 	SetVariantString(OfficerModel);
 	AcceptEntityInput(i, "SetCustomModel");
 	SetEntProp(i, Prop_Send, "m_bUseClassAnimations", 1);
 }
-
+*/
 public Action ObjectDeflected(Event event, const char[] name, bool dontBroadcast)
 {
 	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
-	BaseVehicle airblaster = BaseVehicle( event.GetInt("userid"), true );
+	//BaseVehicle airblaster = BaseVehicle( event.GetInt("userid"), true );
 	BaseVehicle airblasted = BaseVehicle( event.GetInt("ownerid"), true );
 	int weaponid = GetEventInt(event, "weaponid");
 	if( weaponid )		// number lower or higher than 0 is considered "true", learned that in C programming lol

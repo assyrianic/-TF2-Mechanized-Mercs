@@ -126,7 +126,7 @@ methodmap CLightTank < CTank
 		SetVariantString(LightTankModel);
 		AcceptEntityInput(this.index, "SetCustomModel");
 		SetEntProp(this.index, Prop_Send, "m_bUseClassAnimations", 1);
-		SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
+		//SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
 	}
 
 	public void Death ()
@@ -198,19 +198,19 @@ methodmap CLightTank < CTank
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
 			}
-			int ammo = GetWeaponAmmo(Turret);
-			if ( ammo >= 0 and ammo < MMCvars[MaxSMGAmmo].IntValue ) {
+			int clip = GetWeaponClip(Turret);
+			if ( clip >= 0 and clip < MMCvars[MaxSMGAmmo].IntValue ) {
 				if (iCurrentMetal < repairamount)
 					repairamount = iCurrentMetal;
-				if ( (MMCvars[MaxSMGAmmo].IntValue-ammo < repairamount*mult) )
-					repairamount = RoundToCeil( float((MMCvars[MaxSMGAmmo].IntValue-ammo)/mult) );
+				if ( (MMCvars[MaxSMGAmmo].IntValue-clip < repairamount*mult) )
+					repairamount = RoundToCeil( float((MMCvars[MaxSMGAmmo].IntValue-clip)/mult) );
 
-				if (repairamount < 1 and iCurrentMetal > 0)
+				if (repairamount < 1 and iCurrentMetal)
 					repairamount = 1;
 
-				SetWeaponAmmo(Turret, ammo+repairamount*mult);
-				if (ammo > MMCvars[MaxSMGAmmo].IntValue) 
-					SetWeaponAmmo(Turret, MMCvars[MaxSMGAmmo].IntValue);
+				SetWeaponClip(Turret, clip+repairamount*mult);
+				if (GetWeaponClip(Turret) > MMCvars[MaxSMGAmmo].IntValue) 
+					SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
 					
 				this.iRockets += repairamount*mult;
 				if( this.iRockets > MMCvars[MaxRocketAmmo].IntValue )
@@ -218,6 +218,15 @@ methodmap CLightTank < CTank
 
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
+			}
+			if( this.bHasGunner ) {
+				int gunner = this.hGunner.index;
+				int gunner_turret = GetEntPropEnt(gunner, Prop_Send, "m_hActiveWeapon");
+				int gunner_clip = GetWeaponClip(gunner_turret);
+				if( gunner_clip < MMCvars[MaxGunnerAmmo].IntValue )
+					SetWeaponClip(gunner_turret, gunner_clip+repairamount*mult);
+				if( GetWeaponClip(gunner_turret) > MMCvars[MaxGunnerAmmo].IntValue )
+					SetWeaponClip(gunner_turret, MMCvars[MaxGunnerAmmo].IntValue);
 			}
 			if (repairamount)
 				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
@@ -239,6 +248,16 @@ methodmap CLightTank < CTank
 		this.iRockets += 1;
 		if( this.iRockets > MMCvars[MaxRocketAmmo].IntValue )
 			this.iRockets = MMCvars[MaxRocketAmmo].IntValue;
+		
+		if( this.bHasGunner ) {
+			int gunner = this.hGunner.index;
+			int gunner_turret = GetEntPropEnt(gunner, Prop_Send, "m_hActiveWeapon");
+			int gunner_clip = GetWeaponClip(gunner_turret);
+			if( gunner_clip < MMCvars[MaxGunnerAmmo].IntValue )
+				SetWeaponClip(gunner_turret, ++gunner_clip);
+			if( GetWeaponClip(gunner_turret) > MMCvars[MaxGunnerAmmo].IntValue )
+				SetWeaponClip(gunner_turret, MMCvars[MaxGunnerAmmo].IntValue);
+		}
 	}
 };
 

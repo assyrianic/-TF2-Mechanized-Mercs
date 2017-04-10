@@ -74,8 +74,8 @@ public void ManageDownloads()
 
 	PrecacheModel(OfficerModel, true);
 	for( i=0; i<sizeof(extensions); i++ ) {
-		Format(s, PLATFORM_MAX_PATH, "%s%s", OfficerModelPrefix, extensions[i]);
-		CheckDownload(s);
+		//Format(s, PLATFORM_MAX_PATH, "%s%s", OfficerModelPrefix, extensions[i]);
+		//CheckDownload(s);
 		
 		Format(s, PLATFORM_MAX_PATH, "models/structures/combine/barracks%s", extensions[i]);
 		CheckDownload(s);
@@ -85,6 +85,7 @@ public void ManageDownloads()
 		CheckDownload(s);
 	}
 	for( i=0 ; i<sizeof(extensionsb) ; i++ ) {
+		/*
 		Format(s, PLATFORM_MAX_PATH, "materials/models/custom/army_spy/cigar_blue%s", extensionsb[i]);
 		CheckDownload(s);
 		Format(s, PLATFORM_MAX_PATH, "materials/models/custom/army_spy/cigar_normal%s", extensionsb[i]);
@@ -107,7 +108,7 @@ public void ManageDownloads()
 		CheckDownload(s);
 		Format(s, PLATFORM_MAX_PATH, "materials/models/custom/army_spy/spy_red%s", extensionsb[i]);
 		CheckDownload(s);
-		
+		*/
 		// synthfac barracks armory
 		Format(s, PLATFORM_MAX_PATH, "materials/models/structures/combine/armory_color%s", extensionsb[i]);
 		CheckDownload(s);
@@ -238,6 +239,8 @@ public void ManageVehicleThink(const BaseVehicle base)
 		case PanzerIII:		ToCLightTank(base).Think();
 		case Destroyer:		ToCDestroyer(base).Think();
 	}
+	if( base.bHasGunner )
+		base.UpdateGunner();
 }
 
 public void ManageVehicleModels(const BaseVehicle base)
@@ -316,8 +319,7 @@ public Action ManageOnVehicleTakeDamage(const BaseVehicle victim, int &attacker,
 
 	switch ( victim.iType ) {
 		case -1: {}
-		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer:
-		{
+		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer: {
 			if (tanker == attacker) {	// vehicles shouldn't be able to hurt themselves
 				damage *= 0.0;
 				return Plugin_Changed;
@@ -387,17 +389,17 @@ public Action ManageOnVehicleTakeDamage(const BaseVehicle victim, int &attacker,
 
 public Action ManageOnVehicleDealDamage(const BaseVehicle victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	float Pos[3]; GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", Pos);	// Spot of attacker
+	/*float Pos[3]; GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", Pos);	// Spot of attacker
 	float Pos2[3]; GetEntPropVector(victim.index, Prop_Send, "m_vecOrigin", Pos2);	// Spot of victim
 	float dist = GetVectorDistance(Pos, Pos2, false);				// Calculate dist between target and attacker
 	char classname[64], strEntname[32];
 
-	if (IsValidEdict(inflictor))
+	if( IsValidEdict(inflictor) )
 		GetEntityClassname(inflictor, strEntname, sizeof(strEntname));
-	if (IsValidEdict(weapon))
+	if( IsValidEdict(weapon) )
 		GetEdictClassname(weapon, classname, sizeof(classname));
-
-	switch ( BaseVehicle(attacker).iType ) {
+	*/
+	switch( BaseVehicle(attacker).iType ) {
 		case -1: {}
 		case Tank, ArmoredCar, Ambulance, KingPanzer, PanzerIII, Destroyer: {
 			if( victim.index != attacker and victim.iTeam != GetClientTeam(attacker) ) {

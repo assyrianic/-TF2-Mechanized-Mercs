@@ -180,7 +180,7 @@ methodmap CArmCar < CTank
 		SetVariantString(ArmCarModel);
 		AcceptEntityInput(this.index, "SetCustomModel");
 		SetEntProp(this.index, Prop_Send, "m_bUseClassAnimations", 1);
-		SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
+		//SetEntPropFloat(this.index, Prop_Send, "m_flModelScale", 1.25);
 	}
 
 	public void Death ()
@@ -261,7 +261,7 @@ methodmap CArmCar < CTank
 					repairamount = 1;
 
 				SetWeaponClip(Turret, clip+repairamount*mult);
-				if (clip > MMCvars[MaxSMGAmmo].IntValue)
+				if (GetWeaponClip(Turret) > MMCvars[MaxSMGAmmo].IntValue)
 					SetWeaponClip(Turret, MMCvars[MaxSMGAmmo].IntValue);
 				
 				this.iRockets += repairamount*mult;
@@ -272,6 +272,15 @@ methodmap CArmCar < CTank
 
 				iCurrentMetal -= repairamount;
 				SetEntProp(engie.index, Prop_Data, "m_iAmmo", iCurrentMetal, 4, 3);
+			}
+			if( this.bHasGunner ) {
+				int gunner = this.hGunner.index;
+				int gunner_turret = GetEntPropEnt(gunner, Prop_Send, "m_hActiveWeapon");
+				int gunner_clip = GetWeaponClip(gunner_turret);
+				if( gunner_clip < MMCvars[MaxGunnerAmmo].IntValue )
+					SetWeaponClip(gunner_turret, gunner_clip+repairamount*mult);
+				if( GetWeaponClip(gunner_turret) > MMCvars[MaxGunnerAmmo].IntValue )
+					SetWeaponClip(gunner_turret, MMCvars[MaxGunnerAmmo].IntValue);
 			}
 			if (repairamount)
 				EmitSoundToClient(engie.index, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
@@ -293,6 +302,16 @@ methodmap CArmCar < CTank
 		this.iRockets += 1;
 		if( this.iRockets > MMCvars[MaxRocketAmmo].IntValue )
 			this.iRockets = MMCvars[MaxRocketAmmo].IntValue;
+		
+		if( this.bHasGunner ) {
+			int gunner = this.hGunner.index;
+			int gunner_turret = GetEntPropEnt(gunner, Prop_Send, "m_hActiveWeapon");
+			int gunner_clip = GetWeaponClip(gunner_turret);
+			if( gunner_clip < MMCvars[MaxGunnerAmmo].IntValue )
+				SetWeaponClip(gunner_turret, ++gunner_clip);
+			if( GetWeaponClip(gunner_turret) > MMCvars[MaxGunnerAmmo].IntValue )
+				SetWeaponClip(gunner_turret, MMCvars[MaxGunnerAmmo].IntValue);
+		}
 	}
 };
 
