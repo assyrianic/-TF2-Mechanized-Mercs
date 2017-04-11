@@ -14,70 +14,78 @@ methodmap CAmbulance < CTank	/*you MUST inherit from CTank if u want roadkilling
 	{
 		return view_as< CAmbulance >( CTank(ind, uid) );
 	}
+	/*property int iPassengers
+	{
+		public get() {				//{ return RightClickAmmo[ this.index ]; } {
+			int item; hFields[this.index].GetValue("iRockets", item);
+			return item;
+		}
+		public set( const int val ) {		//{ RightClickAmmo[ this.index ] = val; } {
+			hFields[this.index].SetValue("iRockets", val);
+		}
+	}*/
 
 	public void Think ()
 	{
 		int client = this.index;
-		if ( !IsPlayerAlive(client) )
+		if( !IsPlayerAlive(client) )
 			return;
 
 		int buttons = GetClientButtons(client);
 		float vell[3];	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", vell);
 		float currtime = GetGameTime();
 		
-		if ( (buttons & IN_FORWARD) and vell[0] != 0.0 and vell[1] != 0.0 )
-		{
+		if( (buttons & IN_FORWARD) and vell[0] != 0.0 and vell[1] != 0.0 ) {
 			StopSound(client, SNDCHAN_AUTO, ArmCarIdle);
 
 			this.flSpeed += AMB_ACCELERATION;
-			if (this.flSpeed > AMB_SPEEDMAX)
+			if( this.flSpeed > AMB_SPEEDMAX )
 				this.flSpeed = AMB_SPEEDMAX;
 
-			if (this.flIdleSound != 0.0)
+			if( this.flIdleSound != 0.0 )
 				this.flIdleSound = 0.0;
-			if ( this.flSoundDelay < currtime ) {
+			if( this.flSoundDelay < currtime ) {
 				//strcopy(s, PLATFORM_MAX_PATH, ArmCarMove);
 				EmitSoundToAll(ArmCarMove, client, SNDCHAN_AUTO);
 				this.flSoundDelay = currtime+1.0;
 			}
-			if (bGasPowered.BoolValue)
+			if( bGasPowered.BoolValue )
 				this.DrainGas(0.1);
 		}
-		else if ( (buttons & IN_BACK) and vell[0] != 0.0 and vell[1] != 0.0 )
-		{
+		else if( (buttons & IN_BACK) and vell[0] != 0.0 and vell[1] != 0.0 ) {
 			StopSound(client, SNDCHAN_AUTO, ArmCarIdle);
 
 			this.flSpeed += AMB_ACCELERATION;
-			if (this.flSpeed > AMB_SPEEDMAXREVERSE)
+			if( this.flSpeed > AMB_SPEEDMAXREVERSE )
 				this.flSpeed = AMB_SPEEDMAXREVERSE;
 			
-			if (this.flIdleSound != 0.0)
+			if( this.flIdleSound != 0.0 )
 				this.flIdleSound = 0.0;
-			if ( this.flSoundDelay < currtime ) {
+			if( this.flSoundDelay < currtime ) {
 				//strcopy(s, PLATFORM_MAX_PATH, ArmCarMove);
 				EmitSoundToAll(ArmCarMove, client, SNDCHAN_AUTO);
 				this.flSoundDelay = currtime+1.0;
 			}
-			if (bGasPowered.BoolValue)
+			if( bGasPowered.BoolValue )
 				this.DrainGas(0.1);
 		}
 		else {
 			StopSound(client, SNDCHAN_AUTO, ArmCarMove);
 			this.flGas += 0.001;
 
-			if (this.flSoundDelay != 0.0)
+			if( this.flSoundDelay != 0.0 )
 				this.flSoundDelay = 0.0;
-			if ( this.flIdleSound < currtime ) {
+			if( this.flIdleSound < currtime ) {
 				//strcopy(s, PLATFORM_MAX_PATH, ArmCarIdle);
 				EmitSoundToAll(ArmCarIdle, client, SNDCHAN_AUTO);
 				this.flIdleSound = currtime+2.0;
 			}
 			this.flSpeed -= AMB_ACCELERATION;
-			if (this.flSpeed < AMB_INITSPEED)
+			if( this.flSpeed < AMB_INITSPEED )
 				this.flSpeed = AMB_INITSPEED;
 		}
 
-		if ( bGasPowered.BoolValue and this.flGas <= 0.0 )
+		if( bGasPowered.BoolValue and this.flGas <= 0.0 )
 			this.flSpeed = 1.0;
 		SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", this.flSpeed);
 

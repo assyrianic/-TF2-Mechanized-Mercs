@@ -37,8 +37,9 @@ float
 #define PLYRHP		6
 #define MAXMETAL	7
 #define ROCKETS		8
+#define GASLEFT		9
 
-int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][9];
+int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][10];
 /* 0-red ; 1-blue */
 
 methodmap GameModeManager {

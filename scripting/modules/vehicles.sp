@@ -46,4 +46,6 @@ make garages act as vehicle spawn points
 
 add tank construct limits to certain constructs
 1 tiger, 3 panzers, 3 howitzer panzers, 4 armored cars, 2 ambulances, 1 marder 2
+
+3-4 passengers for ambulance
 */

@@ -131,10 +131,10 @@ public Action PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	BaseVehicle player = BaseVehicle(event.GetInt("userid"), true);
 	BaseVehicle attacker = BaseVehicle( event.GetInt("attacker"), true );
 
-	if ( player == attacker and !bSelfDamage.BoolValue )
+	if( player == attacker and !bSelfDamage.BoolValue )
 		return Plugin_Continue;
 
-	if ( player.bIsVehicle )
+	if( player.bIsVehicle )
 		player.iHealth -= event.GetInt("damageamount");
 
 	return Plugin_Continue;
@@ -146,7 +146,7 @@ public Action ObjectBuilt(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Continue;
 
 	BaseVehicle engie = BaseVehicle(event.GetInt("userid"), true);
-	if (engie.Class == TFClass_Spy)
+	if( engie.Class == TFClass_Spy )
 		return Plugin_Continue;
 
 	return Plugin_Continue;
@@ -154,12 +154,28 @@ public Action ObjectBuilt(Event event, const char[] name, bool dontBroadcast)
 
 public Action RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
-	for (int team=0; team<2; ++team) {
-		for (int offset=0 ; offset<3 ; offset++) {
-			if (GarageRefs[team][offset] and IsValidEntity(EntRefToEntIndex(GarageRefs[team][offset])))
+	for( int team=0; team<2; ++team ) {
+		for( int offset=0 ; offset<3 ; offset++ ) {
+			if( GarageRefs[team][offset] and IsValidEntity(EntRefToEntIndex(GarageRefs[team][offset])) )
 				CreateTimer( 0.1, RemoveEnt, GarageRefs[team][offset] );
 			GarageRefs[team][offset] = 0;
 			manager.DeleteGarage(team, OffsetToFlag(offset));
+		}
+	}
+	BaseVehicle vehicle;
+	for( int i=MaxClients ; i ; --i ) {
+		if( !IsValidClient(i) )
+			continue;
+		
+		vehicle = BaseVehicle(i);
+		if( vehicle.bHasGunner ) {
+			if( vehicle.hGunner.index > 0 ) {
+				SetVariantString("!activator");
+				AcceptEntityInput(vehicle.hGunner.index, "ClearParent", vehicle.index, vehicle.hGunner.index, 0);
+				vehicle.hGunner.bIsGunner = false;
+			}
+			vehicle.bHasGunner = false;
+			vehicle.hGunner = view_as< BaseFighter >(0);
 		}
 	}
 	return Plugin_Continue;

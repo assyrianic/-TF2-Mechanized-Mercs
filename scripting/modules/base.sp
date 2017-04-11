@@ -301,13 +301,13 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	}
 	public void Resupply ()
 	{
-		if ( !this.bIsVehicle )
+		if( !this.bIsVehicle )
 			return;
 
 		ManageVehicleTransition(this);
 		//this.iHealth = iTankerHealth.IntValue;
 		ManageHealth(this);
-		if (bGasPowered.BoolValue)
+		if( bGasPowered.BoolValue )
 			this.flGas = StartingFuel.FloatValue;
 	}
 	public void ConvertToVehicle ()
@@ -318,7 +318,7 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 	public void DrainGas (const float amount)
 	{
 		this.flGas -= amount;
-		if (this.flGas <= 0.0)
+		if( this.flGas <= 0.0 )
 			this.flGas = 0.0;
 	}
 	public void UpdateGas ()
@@ -378,28 +378,45 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		
 		this.bHasGunner = true;
 		this.hGunner = gunner;
+		int gunner_index = gunner.index;
 		
 		// remove stuff and set up for secondary gunner's SMG
 		int ent = -1;
 		while( (ent = FindEntityByClassname(ent, "tf_wearable_demoshield")) != -1 ) {
-			if( GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == gunner.index )
+			if( GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == gunner_index )
 				AcceptEntityInput(ent, "Kill");
 		}
 		
-		TF2_RemoveAllWeapons(gunner.index);
+		TF2_RemoveAllWeapons(gunner_index);
 		char attribs[64];
 		Format( attribs, sizeof(attribs), "400 ; 1.0 ; 252 ; 0.0 ; 25 ; 0.0 ; 100 ; 0.01 ; 68 ; %f", (gunner.Class == TFClass_Scout) ? -2.0 : -1.0 );
 		int secnd_turret = gunner.SpawnWeapon("tf_weapon_smg", 16, 1, 0, attribs);
-		SetEntPropEnt(gunner.index, Prop_Send, "m_hActiveWeapon", secnd_turret);
+		SetEntPropEnt(gunner_index, Prop_Send, "m_hActiveWeapon", secnd_turret);
 		SetWeaponClip(secnd_turret, MMCvars[MaxGunnerAmmo].IntValue);
 		SetWeaponAmmo(secnd_turret, 0);
 		
+		float thisOrigin[3]; GetClientAbsOrigin(this.index, thisOrigin);
+		// Set gunner's origin just above and slightly back
+		thisOrigin[2] += 50.0;
+		TeleportEntity(gunner_index, thisOrigin, NULL_VECTOR, NULL_VECTOR);
+		
+		// making gunner smaller so they don't get in the way of the Tank Driver's SMG.
+		// Also so that gunner isn't obvious sniper bait :)
+		SetEntPropFloat(gunner_index, Prop_Send, "m_flModelScale", 0.5);
+		
+		// gonna kill gunner's movement so they can't get away.
+		// then gonna make gunner non-solid so they're not constantly pushing the tanker.
+		SetEntityMoveType(gunner_index, MOVETYPE_NONE);
+		SetEntProp(gunner_index, Prop_Send, "m_nSolidType", 0);
+		SetEntProp(gunner_index, Prop_Data, "m_CollisionGroup", 0);
+		//SetEntProp(gunner_index, Prop_Data, "m_CollisionGroup", 2);
+		//PrintToChat(gunner_index, "old usSolidFlags == %i", GetEntProp(gunner_index, Prop_Send, "m_usSolidFlags"));
+		SetEntProp(gunner_index, Prop_Send, "m_usSolidFlags", 0x0004);
+		
 		// gunner equipped, let's affirm their gunner status and move them to the top of the weapon.
 		gunner.bIsGunner = true;
-		
-		float thisOrigin[3]; GetClientAbsOrigin(this.index, thisOrigin);
-		thisOrigin[2] += 50.0;
-		TeleportEntity(gunner.index, thisOrigin, NULL_VECTOR, NULL_VECTOR);
+		//SetVariantString("!activator");
+		//AcceptEntityInput(gunner_index, "SetParent", this.index, gunner_index, 0);
 	}
 	public void RemoveGunner ()
 	{
@@ -409,6 +426,15 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		
 		// We're gonna regenerate our ex-gunner but without resetting health.
 		int gunner = this.hGunner.index;
+		SetEntPropFloat(gunner, Prop_Send, "m_flModelScale", 1.0);
+		
+		//SetVariantString("!activator");
+		//AcceptEntityInput(gunner, "ClearParent", this.index, gunner, 0);
+		
+		SetEntityMoveType(gunner, MOVETYPE_WALK);
+		SetEntProp(gunner, Prop_Send, "m_nSolidType", 2);
+		SetEntProp(gunner, Prop_Data, "m_CollisionGroup", 5);
+		SetEntProp(gunner, Prop_Send, "m_usSolidFlags", 16);
 		
 		// get gunner's hp
 		int gunner_hp = GetClientHealth(gunner);
@@ -451,23 +477,31 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		}
 		
 		int gunner = this.hGunner.index;
-		if ( (GetClientButtons(gunner) & IN_JUMP) ) {
+		if( (GetClientButtons(gunner) & IN_JUMP) ) {
 			this.RemoveGunner();
 			return;
 		}
 		
 		int driver = this.index;
 		float thisVel[3]; GetEntPropVector(driver, Prop_Data, "m_vecAbsVelocity", thisVel);
-
+		/*
 		float thisOrigin[3], plyrOrigin[3];
 		GetClientAbsOrigin(driver, thisOrigin);
 		GetClientAbsOrigin(gunner, plyrOrigin);
+		thisOrigin[2] += 50.0;
+		*/
+		float vPosition[3], vAngles[3], vVec[3];
+		GetClientEyePosition(driver, vPosition);
+		GetClientEyeAngles(driver, vAngles);
 
-		if (GetVectorDistance(thisOrigin, plyrOrigin, false) > 10.0) {
-			thisOrigin[2] += 50.0;
-			TeleportEntity(gunner, thisOrigin, NULL_VECTOR, thisVel);
-		}
-		else TeleportEntity(gunner, NULL_VECTOR, NULL_VECTOR, thisVel);
+		vVec[0] = Cosine( DegToRad(vAngles[1]) ) * Cosine( DegToRad(vAngles[0]) );
+		vVec[1] = Sine( DegToRad(vAngles[1]) ) * Cosine( DegToRad(vAngles[0]) );
+		vVec[2] = -Sine( DegToRad(vAngles[0]) );
+
+		vPosition[0] -= vVec[0] * 30.0;
+		vPosition[1] -= vVec[1] * 30.0;
+		vPosition[2] += vVec[2] * 50.0;
+		TeleportEntity(gunner, vPosition, NULL_VECTOR, thisVel);
 	}
 };
 

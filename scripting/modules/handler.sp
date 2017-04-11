@@ -239,8 +239,6 @@ public void ManageVehicleThink(const BaseVehicle base)
 		case PanzerIII:		ToCLightTank(base).Think();
 		case Destroyer:		ToCDestroyer(base).Think();
 	}
-	if( base.bHasGunner )
-		base.UpdateGunner();
 }
 
 public void ManageVehicleModels(const BaseVehicle base)
@@ -464,7 +462,7 @@ public void ManageVehicleEngieHit(const BaseVehicle base, const BaseVehicle engi
 
 public void ManageVehicleNearDispenser(const BaseVehicle base)
 {
-	if ( bGasPowered.BoolValue ) {
+	if( bGasPowered.BoolValue ) {
 		float startingfuel = StartingFuel.FloatValue;
 		base.flGas += 0.1;
 		if (base.flGas > startingfuel)
@@ -486,35 +484,36 @@ public void ManageVehicleNearDispenser(const BaseVehicle base)
 
 public void ManageVehicleMedigunHeal(const BaseVehicle base, const BaseVehicle medic)	// Mediguns should give gas instead of actually healing
 {
-	if ( bGasPowered.BoolValue ) {
+	if( bGasPowered.BoolValue ) {
 		float startingfuel = StartingFuel.FloatValue;
 		base.flGas += 0.1;
-		if (base.flGas > startingfuel)
+		if( base.flGas > startingfuel )
 			base.flGas = startingfuel;
 	}
 }
 public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3], float angles[3], int& weapon)
 {
-	if (!bEnabled.BoolValue)
+	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
 	BaseVehicle player = BaseVehicle(client);
 	int vehflags = GetEntityFlags(client);
+
 /*
-This controls the angularity of how treads function in real life.
-Tanks should NOT be able to move sideways left or right like a crab can.
-force the left and right buttons to instead turn player angles and nullify the velocity of strafing.
+	This controls the angularity of how treads function in real life.
+	Tanks should NOT be able to strafe left or right like a crab.
+	force the left and right buttons to instead turn player angles and nullify the velocity of strafing.
 */
-	if ( player.bIsVehicle and !IsFakeClient(client) ) {
-		switch (player.iType) {
+	if( player.bIsVehicle and !IsFakeClient(client) ) {
+		switch( player.iType ) {
 			case ArmoredCar, Ambulance, Destroyer: {
-				if ( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
+				if( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] += 10.0;
 					vel[1] = 1.0;
 					TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR);
 					return Plugin_Changed;
 				}
-				if ( (buttons & IN_MOVERIGHT) and (vehflags & FL_ONGROUND) ) {
+				if( (buttons & IN_MOVERIGHT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] -= 10.0;
 					vel[1] = 1.0;
 					TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR);
@@ -522,13 +521,13 @@ force the left and right buttons to instead turn player angles and nullify the v
 				}
 			}
 			case Tank,PanzerIII: {
-				if ( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
+				if( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] += 7.0;
 					vel[1] = 1.0;
 					TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR);
 					return Plugin_Changed;
 				}
-				if ( (buttons & IN_MOVERIGHT) and (vehflags & FL_ONGROUND) ) {
+				if( (buttons & IN_MOVERIGHT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] -= 7.0;
 					vel[1] = 1.0;
 					TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR);
@@ -536,13 +535,13 @@ force the left and right buttons to instead turn player angles and nullify the v
 				}
 			}
 			case KingPanzer: {
-				if ( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
+				if( (buttons & IN_MOVELEFT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] += 4.0;
 					vel[1] = 1.0;
 					TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR);
 					return Plugin_Changed;
 				}
-				if ( (buttons & IN_MOVERIGHT) and (vehflags & FL_ONGROUND) ) {
+				if( (buttons & IN_MOVERIGHT) and (vehflags & FL_ONGROUND) ) {
 					angles[1] -= 4.0;
 					vel[1] = 1.0;
 					TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR);
@@ -550,7 +549,8 @@ force the left and right buttons to instead turn player angles and nullify the v
 				}
 			}
 		}
-		if ( (buttons & IN_ATTACK3) and player.iType > -1 ) {
+		// novelty horn honking! It's the small details that really add to a mod :)
+		if( (buttons & IN_ATTACK3) and player.iType > -1 ) {
 			if (player.bHonkedHorn)
 				return Plugin_Continue;
 			else {
@@ -559,7 +559,8 @@ force the left and right buttons to instead turn player angles and nullify the v
 				SetPawnTimer(_ResetHorn, 4.0, player);
 			}
 		}
-		if ( (buttons & IN_DUCK) and (vehflags & FL_ONGROUND) ) {
+		// Vehicles shouldn't be able to duck
+		if( (buttons & IN_DUCK) and (vehflags & FL_ONGROUND) ) {
 			buttons &= ~IN_DUCK;
 			return Plugin_Changed;
 		}
@@ -579,10 +580,25 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 		return;
 
 	switch( condition ) {
-		case TFCond_Bleeding, TFCond_OnFire/*, TFCond_Jarated*/:	/* vehicles shouldn't bleed or be flammable */
+		case TFCond_Bleeding, TFCond_OnFire/*, TFCond_Jarated*/: {	/* vehicles shouldn't bleed or be flammable */
 			TF2_RemoveCondition(client, condition);
+			return;
+		}
 	}
+	// apply whatever condition to the gunner as well.
+	if( player.bHasGunner )
+		TF2_AddCondition(player.hGunner.index, condition, TFCondDuration_Infinite);
 }
+public void TF2_OnConditionRemoved(int client, TFCond condition)
+{
+	BaseVehicle player = BaseVehicle(client);
+	if( !player.bIsVehicle )
+		return;
+	
+	if( player.bHasGunner )
+		TF2_RemoveCondition(player.hGunner.index, condition);
+}
+
 public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
 {
 	if( !AllowVehicleTele.BoolValue and BaseVehicle(client).bIsVehicle ) {
@@ -594,7 +610,7 @@ public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
 
 public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDefinitionIndex, Handle& hItem)
 {
-	if ( !bEnabled.BoolValue )
+	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 	/*
 	TF2Item hItemOverride = null;

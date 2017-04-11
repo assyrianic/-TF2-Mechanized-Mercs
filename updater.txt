@@ -4,13 +4,13 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.6.0"
+			"Latest"	"1.6.2"
 		}
 		
-		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.0:"
-		"Notes"	"added secondary gunner to certain tanks"
-		"Notes" "fixed panzer 2 giving ammo instead of clipsize when engineer fixing"
-		"Notes"	"resized vehicles back to normal"
+		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.2:"
+		"Notes"	"improved secondary gunner feature"
+		"Notes" "secondary gunners now experience the same conditions tanker does"
+		"Notes" "if tanker dies, secondary gunner dies as well to same person"
 	}
 	
 	"Files"

@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.6.0"
+#define PLUGIN_VERSION		"1.6.2"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -910,6 +910,8 @@ public void SetConstructAttribs(const BaseVehicle veh, const int team, const int
 		case Tank, ArmoredCar, KingPanzer, PanzerIII:
 			ToCTank(veh).iRockets = TankConstruct[team-2][index][ROCKETS];
 	}
+	if( bGasPowered.BoolValue )
+		veh.flGas = 0.0 + TankConstruct[team-2][index][GASLEFT];
 }
 
 public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int select)
@@ -1231,13 +1233,15 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 					TankConstruct[team-2][index][METAL] = 0;
 					TankConstruct[team-2][index][AMMO] = 0;
 					TankConstruct[team-2][index][HEALTH] = 0;
-					//TankConstruct[team-2][index][PLYRHP] = 0;
+					TankConstruct[team-2][index][PLYRHP] = 0;
 					TankConstruct[team-2][index][MAXMETAL] = metal;
 					TankConstruct[team-2][index][ROCKETS] = 0;
 					switch( vehicletype ) {
 						case Tank, PanzerIII, KingPanzer:	TankConstruct[team-2][index][ROCKETS] = MMCvars[MaxRocketAmmo].IntValue;
 						case ArmoredCar:			TankConstruct[team-2][index][ROCKETS] = MMCvars[MaxRocketAmmo].IntValue * 2;
 					}
+					if( bGasPowered.BoolValue )
+						TankConstruct[team-2][index][GASLEFT] = RoundFloat( StartingFuel.FloatValue );
 				}
 			}
 			else {
@@ -1381,7 +1385,9 @@ public void OnPreThink(int client)
 			}
 			else CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't exit the vehicle in this area.");
 		}
-			
+		if( player.bHasGunner )
+			player.UpdateGunner();
+		
 		if( IsNearSpencer(client) )
 			ManageVehicleNearDispenser(player); // in handler.sp
 		
@@ -2708,7 +2714,7 @@ stock bool IsClientStuck(const int iEntity, const float flOrigin[3])
 }
 public bool TraceFilterNotSelf(int entity, int contentsMask, any client)
 {
-	if (entity == client)
+	if( entity == client )
 		return false;
 	return true;
 }
