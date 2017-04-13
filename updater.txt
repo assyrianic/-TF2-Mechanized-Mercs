@@ -4,13 +4,11 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.6.2"
+			"Latest"	"1.6.3"
 		}
 		
-		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.2:"
-		"Notes"	"improved secondary gunner feature"
-		"Notes" "secondary gunners now experience the same conditions tanker does"
-		"Notes" "if tanker dies, secondary gunner dies as well to same person"
+		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.3:"
+		"Notes"	"patched tankers dropping weapons by killing off all dropped weapons"
 	}
 	
 	"Files"

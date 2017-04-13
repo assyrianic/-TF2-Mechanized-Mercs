@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.6.2"
+#define PLUGIN_VERSION		"1.6.3"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -380,7 +380,6 @@ public void OnClientPutInServer(int client)
 	user.flIdleSound=0.0;
 	user.bHasGunner = false;
 	user.hGunner = view_as< BaseFighter >(0);
-
 	ManageConnect(client);	// in handler.sp
 }
 
@@ -1356,13 +1355,14 @@ public void OnPreThink(int client)
 	if( player.bIsVehicle ) {
 		int team = GetClientTeam(client);
 		if( (GetClientButtons(client) & IN_JUMP) and (GetEntityFlags(client) & FL_ONGROUND) ) {
-			if( player.bHasGunner )
-				player.RemoveGunner();
 
 			// record vehicle info so we can recreate our vehicle construct as ready to use
 			float vec_origin[3]; GetClientAbsOrigin(client, vec_origin);
 			//vec_origin[2] += 10.0;
 			if( BringClientToSide(client, vec_origin) ) {	// found safe place for player to be
+				if( player.bHasGunner )
+					player.RemoveGunner();
+
 				int index = manager.SpawnTankConstruct(client, vec_origin, team, player.iType, false);
 				if( index != -1 ) {
 					TankConstruct[team-2][index][METAL] = 999999999;
@@ -1373,9 +1373,9 @@ public void OnPreThink(int client)
 						case Tank, ArmoredCar, KingPanzer, PanzerIII:
 							TankConstruct[team-2][index][ROCKETS] = ToCTank(player).iRockets;
 					}
-					player.iType = -1;
 					// we got our info, let's get out of the vehicle.
 					player.bIsVehicle = false;
+					player.iType = -1;
 					player.Reset();
 					TF2_RegeneratePlayer(client);
 					if( TankConstruct[team-2][index][PLYRHP] > 0 )
@@ -1807,6 +1807,9 @@ public void OnEntityCreated(int entity, const char[] classname)
 
 	if( MMCvars[ReplacePowerups].BoolValue and StrContains(classname, "rune") != -1 )
 		SDKHook(entity, SDKHook_SpawnPost, HookPowerup);
+		
+	if( StrEqual(classname, "tf_dropped_weapon") )
+		SDKHook(entity, SDKHook_SpawnPost, OnDroppedWeaponSpawn);
 }
 
 public void HookPowerup(int entity)
@@ -1816,11 +1819,29 @@ public void HookPowerup(int entity)
 	//vecOrigin[2] += 5.0;
 	manager.SpawnTankPowerup(vecOrigin, GetRandomInt(Tank, Destroyer));
 }
+public void OnDroppedWeaponSpawn(int entity)
+{
+	//int client = AccountIDToClient( GetEntProp(entity, Prop_Send, "m_iAccountID") );
+	//if( client != -1 )
+	AcceptEntityInput(entity, "kill");
+} 
 
 
 /*************************************************/
 /******************* STOCKS **********************/
 /*************************************************/
+stock int AccountIDToClient(const int iAccountID)
+{
+	for( int i=MaxClients ; i ; --i ) {
+		if( !IsClientValid(i) )
+			continue;
+			
+		if( GetSteamAccountID(i) == iAccountID )
+			return i;
+	}
+	return -1;
+
+}  
 stock int GetHealingTarget(const int client)
 {
 	int medigun = GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
