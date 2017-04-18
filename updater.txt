@@ -4,11 +4,11 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.6.3"
+			"Latest"	"1.6.4"
 		}
 		
-		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.3:"
-		"Notes"	"patched tankers dropping weapons by killing off all dropped weapons"
+		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.4:"
+		"Notes"	"patched engineers requiring to build garages when 'mechmercs_allowfreevehicles' cvar is enabled"
 	}
 	
 	"Files"

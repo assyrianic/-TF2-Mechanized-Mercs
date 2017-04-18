@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.6.3"
+#define PLUGIN_VERSION		"1.6.4"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -608,19 +608,19 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 	if( BaseFighter(client).Class == TFClass_Engineer ) {
 		Menu bases = new Menu( MenuHandler_BuildGarage );
 		
-		if( !(GarageFlags[team-2] & SUPPORTBUILT) )
+		if( !(GarageFlags[team-2] & SUPPORTBUILT) and !free )
 			bases.AddItem("2", "Support Vehicle Garage: Unlocks the Scout Car and Ambulance vehicles");
 		else {
 			bases.AddItem("11", "Armored Car: Machinegun & 20mm Cannon");
 			bases.AddItem("12", "Ambulance: Self Defense Machinegun");
 		}
-		if( !(GarageFlags[team-2] & OFFENSIVEBUILT) )
+		if( !(GarageFlags[team-2] & OFFENSIVEBUILT) and !free )
 			bases.AddItem("4", "Offensive Vehicle Garage: Unlocks the Panzer II and Panzer IV vehicles");
 		else {
 			bases.AddItem("13", "Panzer 2: Machinegun & Arcing, HE Rockets");
 			bases.AddItem("10", "Panzer 4: Machinegun & Rockets");
 		}
-		if( !(GarageFlags[team-2] & HEAVYBUILT) )
+		if( !(GarageFlags[team-2] & HEAVYBUILT) and !free )
 			bases.AddItem("8", "Heavy Support Vehicle Garage: Unlocks the King Panzer and Tank Destroyer vehicles");
 		else {
 			bases.AddItem("14", "Tiger 2 King Panzer: Machinegun, Rockets, Lotsa Health");
@@ -884,7 +884,7 @@ public Action OnConstructTouch(int item, int other)
 				toucher.bIsVehicle = true;
 				toucher.ConvertToVehicle();
 				toucher.VehHelpPanel();
-				SetPawnTimer(SetConstructAttribs, 0.12, toucher, team, index);
+				SetPawnTimer(SetConstructAttribs, 0.1, toucher, team, index);
 				float VehLoc[3]; VehLoc = Vec_GetEntPropVector(item, Prop_Data, "m_vecAbsOrigin");
 				TeleportEntity(other, VehLoc, NULL_VECTOR, NULL_VECTOR);
 				
@@ -1378,8 +1378,10 @@ public void OnPreThink(int client)
 					player.iType = -1;
 					player.Reset();
 					TF2_RegeneratePlayer(client);
-					if( TankConstruct[team-2][index][PLYRHP] > 0 )
+					if( TankConstruct[team-2][index][PLYRHP] > 0 ) {
 						SetEntityHealth(client, TankConstruct[team-2][index][PLYRHP]);
+						TankConstruct[team-2][index][PLYRHP] = 0;
+					}
 					return;
 				}
 			}
