@@ -4,11 +4,11 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.6.4"
+			"Latest"	"1.6.5"
 		}
 		
-		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.4:"
-		"Notes"	"patched engineers requiring to build garages when 'mechmercs_allowfreevehicles' cvar is enabled"
+		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.5:"
+		"Notes"	"added so that, when engineers run out of metal, they can build vehicles as fast as other classes."
 	}
 	
 	"Files"

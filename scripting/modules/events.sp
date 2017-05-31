@@ -12,51 +12,56 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 		//SetVariantString("0");
 		//AcceptEntityInput(client, "SetForcedTauntCam");
 
-		if( IsBlueBlocked(client) or IsRedBlocked(client) )
+		if( IsBlueBlocked(client) or IsRedBlocked(client) ) {
+			player.iType = -1;
+			player.bSetOnSpawn = false;
 			return Plugin_Continue;
-
+		}
+		
 		bool free = AllowFreeClasses.BoolValue;
 		int team = player.iTeam;
 		//bool unlocked = IsClassUnlocked(player);
-		if( player.Class == TFClass_Engineer )
+		if( player.Class == TFClass_Engineer and !player.bIsVehicle )
 			CPrintToChat(client, "{red}[MechMercs] {white}You can build Vehicles Garages (!garage). Once the Garages are done building, you and your team can build vehicles (!vehicle)");
 
-		switch( player.iType ) {
-			case -1: { player.bSetOnSpawn = false; }
-			case ArmoredCar, Ambulance: {
-				if( (GarageFlags[team-2] & SUPPORTBUILT) or free ) {
-					player.bSetOnSpawn = true;
+		if( player.bIsVehicle ) {
+			switch( player.iType ) {
+				case -1: { player.bSetOnSpawn = false; }
+				case ArmoredCar, Ambulance: {
+					if( (GarageFlags[team-2] & SUPPORTBUILT) or free ) {
+						player.bSetOnSpawn = true;
+					}
+					else {
+						CPrintToChat(client, "{red}[Mechanized Mercs] {white}Armored Cars & Ambulances are currently locked, Please Build a Support Garage to Unlock them.");
+						player.iType = -1;
+						player.bSetOnSpawn = false;
+					}
 				}
-				else {
-					CPrintToChat(client, "{red}[Mechanized Mercs] {white}Armored Cars & Ambulances are currently locked, Please Build a Support Garage to Unlock them.");
-					player.iType = -1;
-					player.bSetOnSpawn = false;
+				case Tank, PanzerIII: {
+					if( (GarageFlags[team-2] & OFFENSIVEBUILT) or free ) {
+						player.bSetOnSpawn = true;
+					}
+					else {
+						CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer 4s and Panzer 2s are currently locked, Please Build an Offensive Garage to Unlock them.");
+						player.iType = -1;
+						player.bSetOnSpawn = false;
+					}
+				}
+				case KingPanzer, Destroyer: {
+					if( (GarageFlags[team-2] & HEAVYBUILT) or free ) {
+						player.bSetOnSpawn = true;
+					}
+					else {
+						CPrintToChat(client, "{red}[Mechanized Mercs] {white}King Tigers & Marder 2 Tank Destroyers are currently locked, Please Build a Heavy Support Garage to Unlock them.");
+						player.iType = -1;
+						player.bSetOnSpawn = false;
+					}
 				}
 			}
-			case Tank, PanzerIII: {
-				if( (GarageFlags[team-2] & OFFENSIVEBUILT) or free ) {
-					player.bSetOnSpawn = true;
-				}
-				else {
-					CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer 4s and Panzer 2s are currently locked, Please Build an Offensive Garage to Unlock them.");
-					player.iType = -1;
-					player.bSetOnSpawn = false;
-				}
-			}
-			case KingPanzer, Destroyer: {
-				if( (GarageFlags[team-2] & HEAVYBUILT) or free ) {
-					player.bSetOnSpawn = true;
-				}
-				else {
-					CPrintToChat(client, "{red}[Mechanized Mercs] {white}King Tigers & Marder 2 Tank Destroyers are currently locked, Please Build a Heavy Support Garage to Unlock them.");
-					player.iType = -1;
-					player.bSetOnSpawn = false;
-				}
-			}
+			player.bIsVehicle = player.bSetOnSpawn;
+			if( player.bIsVehicle )
+				player.ConvertToVehicle();
 		}
-		player.bIsVehicle = player.bSetOnSpawn;
-		if( player.bIsVehicle )
-			player.ConvertToVehicle();
 	}
 	return Plugin_Continue;
 }
@@ -70,28 +75,8 @@ public Action PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	BaseVehicle player = BaseVehicle(event.GetInt("userid"), true);
 	if( player and IsClientInGame(player.index) ) {
 		if( player.bIsVehicle ) {
-			int team = player.iTeam;
-			int garage;
-			switch( player.iType ) {
-				case -1: {}
-				case ArmoredCar, Ambulance: {
-					// tele to support garage
-					garage = manager.GetGarage(team, SUPPORTGARAGE);
-				}
-				case Tank, PanzerIII: {
-					// tele to offensive
-					garage = manager.GetGarage(team, OFFENSEGARAGE);
-				}
-				case KingPanzer, Destroyer: {
-					// tele to heavy
-					garage = manager.GetGarage(team, HEAVYGARAGE);
-				}
-			}
-			if( garage != 0 ) {
-				float vec_GarageLoc[3]; vec_GarageLoc = Vec_GetEntPropVector(garage, Prop_Data, "m_vecAbsOrigin");
-				vec_GarageLoc[2] += 5.0;
-				TeleportEntity(player.index, vec_GarageLoc, NULL_VECTOR, NULL_VECTOR);
-			}
+			player.iType = -1;
+			player.bIsVehicle = player.bSetOnSpawn = false;
 		}
 	}
 	return Plugin_Continue;
@@ -160,6 +145,12 @@ public Action RoundEnd(Event event, const char[] name, bool dontBroadcast)
 				CreateTimer( 0.1, RemoveEnt, GarageRefs[team][offset] );
 			GarageRefs[team][offset] = 0;
 			manager.DeleteGarage(team, OffsetToFlag(offset));
+		}
+		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
+			if (TankConstruct[team][k][ENTREF]) {
+				CreateTimer( 0.1, RemoveEnt, TankConstruct[team][k][ENTREF] );
+				TankConstruct[team][k][ENTREF] = 0;
+			}
 		}
 	}
 	BaseVehicle vehicle;

@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.6.4"
+#define PLUGIN_VERSION		"1.6.5"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -291,7 +291,7 @@ public void OnPluginStart()
 	
 	HookEvent("player_death", PlayerDeath, EventHookMode_Pre);
 	HookEvent("player_hurt", PlayerHurt, EventHookMode_Pre);
-	HookEvent("player_spawn", PlayerSpawn);
+	//HookEvent("player_spawn", PlayerSpawn);
 	HookEvent("post_inventory_application", Resupply);
 	//HookEvent("player_changeclass", ChangeClass, EventHookMode_Pre);
 	//HookEvent("player_builtobject", ObjectBuilt);
@@ -339,7 +339,7 @@ public void OnConfigsExecuted()
 #if defined _steamtools_included
 		if( manager.bSteam ) {
 			char gameDesc[64];
-			Format(gameDesc, sizeof(gameDesc), "Mechanized Mercs (%s)", PLUGIN_VERSION);
+			//Format(gameDesc, sizeof(gameDesc), "Mechanized Mercs (%s)", PLUGIN_VERSION);
 			Steam_SetGameDescription(gameDesc);
 		}
 #endif
@@ -844,6 +844,11 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 				if( FixAdd > 0 )
 					EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			}
+			// if the engie has no metal, fall back to universal metal speed of half.
+			else if( iCurrentMetal == 0 and TankConstruct[team-2][index][METAL] < TankConstruct[team-2][index][MAXMETAL] ) {
+				TankConstruct[team-2][index][METAL] += FixAdd >> 1;
+				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+			}
 			else EmitSoundToClient(attacker, "weapons/wrench_hit_build_fail.wav");
 		}
 		else if( weapon == GetPlayerWeaponSlot(attacker, 2) and (damagetype & DMG_CLUB) ) {
@@ -861,6 +866,9 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 public Action OnConstructTouch(int item, int other)
 {
 	if( 0 < other <= MaxClients ) {
+		if( IsBlueBlocked(other) or IsRedBlocked(other) )
+			return Plugin_Continue;
+		
 		int team;
 		int index = manager.FindEntityPowerUpIndex(3, item);
 		if( index == -1 ) {
@@ -878,7 +886,8 @@ public Action OnConstructTouch(int item, int other)
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
 			ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle! JUMP to Exit Vehicle");
 			if( GetClientButtons(other) & IN_RELOAD ) {
-				TankConstruct[team-2][index][PLYRHP] = GetClientHealth(other);
+				if( GetClientTeam(other)==team )
+					TankConstruct[team-2][index][PLYRHP] = GetClientHealth(other);
 				BaseVehicle toucher = BaseVehicle(other);
 				toucher.iType = TankConstruct[team-2][index][VEHTYPE];
 				toucher.bIsVehicle = true;
@@ -1232,7 +1241,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 					TankConstruct[team-2][index][METAL] = 0;
 					TankConstruct[team-2][index][AMMO] = 0;
 					TankConstruct[team-2][index][HEALTH] = 0;
-					TankConstruct[team-2][index][PLYRHP] = 0;
+					//TankConstruct[team-2][index][PLYRHP] = 0;
 					TankConstruct[team-2][index][MAXMETAL] = metal;
 					TankConstruct[team-2][index][ROCKETS] = 0;
 					switch( vehicletype ) {
@@ -1355,7 +1364,6 @@ public void OnPreThink(int client)
 	if( player.bIsVehicle ) {
 		int team = GetClientTeam(client);
 		if( (GetClientButtons(client) & IN_JUMP) and (GetEntityFlags(client) & FL_ONGROUND) ) {
-
 			// record vehicle info so we can recreate our vehicle construct as ready to use
 			float vec_origin[3]; GetClientAbsOrigin(client, vec_origin);
 			//vec_origin[2] += 10.0;
@@ -1377,6 +1385,7 @@ public void OnPreThink(int client)
 					player.bIsVehicle = false;
 					player.iType = -1;
 					player.Reset();
+					SetEntityHealth(client, 5);
 					TF2_RegeneratePlayer(client);
 					if( TankConstruct[team-2][index][PLYRHP] > 0 ) {
 						SetEntityHealth(client, TankConstruct[team-2][index][PLYRHP]);

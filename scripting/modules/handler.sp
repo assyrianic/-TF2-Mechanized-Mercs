@@ -302,6 +302,13 @@ public void ManageVehicleTransition(const BaseVehicle base) /* whatever stuff ne
 			marder.Equip();
 		}
 	}
+	if( base.bIsVehicle ) {
+		int ent = -1;
+		while( (ent = FindEntityByClassname(ent, "tf_wearable")) != -1 ) {
+			if( GetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity") == base.index )
+				AcceptEntityInput(ent, "kill");
+		}
+	}
 }
 
 public Action ManageOnVehicleTakeDamage(const BaseVehicle victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)

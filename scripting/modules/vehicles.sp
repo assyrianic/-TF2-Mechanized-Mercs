@@ -48,4 +48,7 @@ add tank construct limits to certain constructs
 1 tiger, 3 panzers, 3 howitzer panzers, 4 armored cars, 2 ambulances, 1 marder 2
 
 3-4 passengers for ambulance
+
+if you die as a vehicle, u don't respawn as one.
+increase build speed a bit.
 */
