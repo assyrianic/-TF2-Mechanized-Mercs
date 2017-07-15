@@ -1,7 +1,7 @@
 # TF2-Mechanized-Mercs
 vehicle mod for team fortress 2.
 
-###General Vehicle Features
+### General Vehicle Features
   * acceleration
   * strafing keys turn the vehicle (subject to lag)
   * moving towards something in the direction of your movement can deal damage (roadkilling)
