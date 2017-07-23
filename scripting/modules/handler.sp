@@ -76,13 +76,14 @@ public void ManageDownloads()
 	for( i=0; i<sizeof(extensions); i++ ) {
 		//Format(s, PLATFORM_MAX_PATH, "%s%s", OfficerModelPrefix, extensions[i]);
 		//CheckDownload(s);
-		
+		/*
 		Format(s, PLATFORM_MAX_PATH, "models/structures/combine/barracks%s", extensions[i]);
 		CheckDownload(s);
 		Format(s, PLATFORM_MAX_PATH, "models/structures/combine/armory%s", extensions[i]);
 		CheckDownload(s);
 		Format(s, PLATFORM_MAX_PATH, "models/structures/combine/synthfac%s", extensions[i]);
 		CheckDownload(s);
+		*/
 	}
 	for( i=0 ; i<sizeof(extensionsb) ; i++ ) {
 		/*
@@ -109,6 +110,7 @@ public void ManageDownloads()
 		Format(s, PLATFORM_MAX_PATH, "materials/models/custom/army_spy/spy_red%s", extensionsb[i]);
 		CheckDownload(s);
 		*/
+		/*
 		// synthfac barracks armory
 		Format(s, PLATFORM_MAX_PATH, "materials/models/structures/combine/armory_color%s", extensionsb[i]);
 		CheckDownload(s);
@@ -134,6 +136,7 @@ public void ManageDownloads()
 		CheckDownload(s);
 		Format(s, PLATFORM_MAX_PATH, "materials/models/structures/combine/synth_fac_main_color%s", extensionsb[i]);
 		CheckDownload(s);
+		*/
 	}
 }
 /*
@@ -333,6 +336,13 @@ public Action ManageOnVehicleTakeDamage(const BaseVehicle victim, int &attacker,
 				//TF2_IgnitePlayer(tanker, attacker);
 				CreateTimer(0.1, Timer_VehicleDeath, victim.userid);
 				return Plugin_Continue;
+			}
+			
+			if( damagetype & (DMG_BULLET|DMG_CLUB|DMG_SLASH) ) {
+				TE_SetupArmorRicochet(damagePosition, NULL_VECTOR);
+				TE_SendToAll();
+				char sound[PLATFORM_MAX_PATH]; Format( sound, PLATFORM_MAX_PATH, "weapons/fx/rics/ric%i.wav", GetRandomInt(1, 5) );
+				EmitSoundToAll(sound, tanker); EmitSoundToAll(sound, tanker);
 			}
 			
 			if ( damage > 100.0 and !strcmp(classname, "tf_weapon_knife", false) ) {	// Vehicles shouldn't die from a single backstab

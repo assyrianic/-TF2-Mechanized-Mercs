@@ -1,11 +1,11 @@
 
 #define SUPPORTBUILT		2	// wtf is the point of bit shifting when I can just directly put the number?
 #define OFFENSIVEBUILT		4
-#define HEAVYBUILT		8
+#define HEAVYBUILT			8
 
 #define SUPPORTGARAGE		0
 #define OFFENSEGARAGE		1
-#define HEAVYGARAGE		2
+#define HEAVYGARAGE			2
 
 #if defined _steamtools_included
 bool steamtools;
@@ -15,17 +15,18 @@ bool
 	isVSH, isMVM
 ;
 
+/*
 int
 	GarageFlags[2],
-	GarageRefs[2][3],	/* index 0-2 stores support, offensive, and heavy garages */
+	GarageRefs[2][3],	// index 0-2 stores support, offensive, and heavy garages
 	GarageGlowRefs[2][3]	// I should've made GarageRefs like this but I'm too lazy to modify. EDIT: did it :3
 ;
-
-
+*/
+/*
 float
 	GarageBuildTime[2][3]
 ;
-
+*/
 #define	MAX_CONSTRUCT_VEHICLES	10
 
 #define ENTREF		0
@@ -44,7 +45,7 @@ int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][10];
 
 methodmap GameModeManager {
 	public GameModeManager() {}
-
+	/*
 	property int RedGarageFlags
 	{
 		public get()				{ return GarageFlags[0]; }
@@ -55,6 +56,7 @@ methodmap GameModeManager {
 		public get()				{ return GarageFlags[1]; }
 		public set( const int val )		{ GarageFlags[1] = val; }
 	}
+	*/
 #if defined _steamtools_included
 	property bool bSteam
 	{
@@ -72,6 +74,7 @@ methodmap GameModeManager {
 		public get()				{ return isMVM; }
 		public set( const bool val )		{ isMVM = val; }
 	}
+	/*
 	public int GetGarage(const int index, const int offset)
 	{
 		return EntRefToEntIndex( GarageRefs[index][ offset ] );
@@ -90,17 +93,6 @@ methodmap GameModeManager {
 	public void DeleteGarage(const int x, const int flag)
 	{
 		GarageFlags[x] &= ~flag ;
-		/*
-		switch (k) {
-			case 0: GarageFlags[0] &= ~SUPPORTBUILT ;
-			case 1: GarageFlags[0] &= ~OFFENSIVEBUILT ;
-			case 2: GarageFlags[0] &= ~HEAVYBUILT ;
-
-			case 3: GarageFlags[1] &= ~SUPPORTBUILT ;
-			case 4: GarageFlags[1] &= ~OFFENSIVEBUILT ;
-			case 5: GarageFlags[1] &= ~HEAVYBUILT ;
-		}
-		*/
 	}
 	public int GetGarageRefFlags(const int index)
 	{
@@ -126,6 +118,7 @@ methodmap GameModeManager {
 		}
 		return false;
 	}
+	*/
 	public bool IsPowerupFull(const int team)
 	{
 		int count=0;
@@ -151,6 +144,9 @@ methodmap GameModeManager {
 	}
 	public int FindEntityPowerUpIndex(const int team, const int entity)
 	{
+		if( entity < 0 )
+			return -1;
+		
 		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
 			if (!TankConstruct[team-2][k][ENTREF])
 				continue;
@@ -317,7 +313,7 @@ methodmap GameModeManager {
 	}
 };
 
-int OffsetToFlag(const int x)
+stock int OffsetToFlag(const int x)
 {
 	int flag=0;
 	switch (x) {
@@ -326,7 +322,7 @@ int OffsetToFlag(const int x)
 		case 2:	flag = HEAVYBUILT;	// 8
 	} return flag;
 }
-int FlagtoOffset(const int x)
+stock int FlagtoOffset(const int x)
 {
 	return (x >> 2);
 }

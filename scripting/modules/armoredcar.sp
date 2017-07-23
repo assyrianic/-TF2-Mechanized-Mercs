@@ -152,22 +152,24 @@ methodmap CArmCar < CTank
 
 				if ( TR_DidHit() ) {
 					int target = TR_GetEntityIndex();
+					int dmgflag = DMG_DIRECT;
+					float dmg = MMCvars[ArmoredCarGunDmg].FloatValue;
 					if ( IsClientValid(target) and target != client and GetClientTeam(target) != this.iTeam )
 					{
 						if ( TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) or TF2_IsPlayerInCondition(client, TFCond_CritOnWin) )
 						{
-							SDKHooks_TakeDamage( target, client, client, MMCvars[ArmoredCarGunDmg].FloatValue*3, DMG_DIRECT );
+							dmgflag |= DMG_CRIT;
 						}
-						else SDKHooks_TakeDamage( target, client, client, MMCvars[ArmoredCarGunDmg].FloatValue, DMG_DIRECT );
+						SDKHooks_TakeDamage( target, client, client, dmg, dmgflag );
 					}
 					else if ( target > MaxClients and IsValidEntity(target) and GetEntProp(target, Prop_Data, "m_iTeamNum") != this.iTeam)
-						SDKHooks_TakeDamage( target, client, client, MMCvars[ArmoredCarGunDmg].FloatValue, DMG_DIRECT);
+						SDKHooks_TakeDamage( target, client, client, dmg, dmgflag);
 				}
 				EmitSoundToAll(ArmCarShoot, client, SNDCHAN_AUTO); EmitSoundToAll(ArmCarShoot, client, SNDCHAN_AUTO); EmitSoundToAll(ArmCarShoot, client, SNDCHAN_AUTO);
 				// Sounds from Company of Heroes 1
 				this.flLastFire = currtime + 0.4;
 				this.iCannonClipsize -= 1;
-
+				
 				float PunchVec[3] = {40.0, 0.0, 30.0};
 				SetEntPropVector(client, Prop_Send, "m_vecPunchAngleVel", PunchVec);
 			}

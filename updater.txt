@@ -4,14 +4,14 @@
 	{
 		"Version"
 		{
-			"Latest"	"1.6.6"
+			"Latest"	"1.6.7"
 		}
 		
-		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.6:"
-		"Notes"	"added cvar for the metal requirement of garages."
-		"Notes"	"attempted fix of the sounds lingering after new round."
-		"Notes"	"attempted fine tuning of getting out of vehicles so you and vehicle do not get stuck."
-		"Notes"	"added extra bounds check for invalid gunner client index."
+		"Notes"	"More info @ https://forums.alliedmods.net/showthread.php?t=293218. Changes in 1.6.7:"
+		"Notes"	"removed garages (commented out all garage code)."
+		"Notes"	"added Current Vehicle Health info for vehicle gunners."
+		"Notes"	"only engineers can build tank constructs but all classes can build them."
+		"Notes"	"vehicle constructs are non-collideable to teammates until they're ready to use."
 	}
 	
 	"Files"

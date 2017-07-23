@@ -88,7 +88,7 @@ methodmap CLightTank < CTank
 			this.flSpeed = 1.0;
 		SetEntPropFloat(this.index, Prop_Send, "m_flMaxspeed", this.flSpeed);
 
-		if ( (buttons & IN_ATTACK2) and this.bIsVehicle ) //MOUSE2 Rocket firing mechanic
+		if ( (buttons & IN_ATTACK2) and this.bIsVehicle ) // MOUSE2 Rocket firing mechanic
 		{
 			if ( this.flLastFire < currtime and this.iRockets > 0 ) {
 				float vPosition[3], vAngles[3], vVec[3];

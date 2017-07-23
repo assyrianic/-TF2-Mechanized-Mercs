@@ -19,40 +19,44 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 		}
 		
 		bool free = AllowFreeClasses.BoolValue;
-		int team = player.iTeam;
+		//int team = player.iTeam;
 		//bool unlocked = IsClassUnlocked(player);
 		if( player.Class == TFClass_Engineer and !player.bIsVehicle )
-			CPrintToChat(client, "{red}[MechMercs] {white}You can build Vehicles Garages (!garage). Once the Garages are done building, you and your team can build vehicles (!vehicle)");
+			//CPrintToChat(client, "{red}[MechMercs] {white}You can build Vehicles Garages (!garage). Once the Garages are done building, you and your team can build vehicles (!vehicle)");
+			CPrintToChat(client, "{red}[MechMercs] {white}You can build Vehicles (!vehicle).");
 
 		if( player.bIsVehicle ) {
 			switch( player.iType ) {
 				case -1: { player.bSetOnSpawn = false; }
 				case ArmoredCar, Ambulance: {
-					if( (GarageFlags[team-2] & SUPPORTBUILT) or free ) {
+					if( /*(GarageFlags[team-2] & SUPPORTBUILT) or*/ free ) {
 						player.bSetOnSpawn = true;
 					}
 					else {
-						CPrintToChat(client, "{red}[Mechanized Mercs] {white}Armored Cars & Ambulances are currently locked, Please Build a Support Garage to Unlock them.");
+						//CPrintToChat(client, "{red}[Mechanized Mercs] {white}Armored Cars & Ambulances are currently locked, Please Build a Support Garage to Unlock them.");
+						CPrintToChat(client, "{red}[Mechanized Mercs] {white}Armored Cars & Ambulances are currently locked.");
 						player.iType = -1;
 						player.bSetOnSpawn = false;
 					}
 				}
 				case Tank, PanzerIII: {
-					if( (GarageFlags[team-2] & OFFENSIVEBUILT) or free ) {
+					if( /*(GarageFlags[team-2] & OFFENSIVEBUILT) or*/ free ) {
 						player.bSetOnSpawn = true;
 					}
 					else {
-						CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer 4s and Panzer 2s are currently locked, Please Build an Offensive Garage to Unlock them.");
+						//CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer 4s and Panzer 2s are currently locked, Please Build an Offensive Garage to Unlock them.");
+						CPrintToChat(client, "{red}[Mechanized Mercs] {white}Panzer 4s and Panzer 2s are currently locked.");
 						player.iType = -1;
 						player.bSetOnSpawn = false;
 					}
 				}
 				case KingPanzer, Destroyer: {
-					if( (GarageFlags[team-2] & HEAVYBUILT) or free ) {
+					if( /*(GarageFlags[team-2] & HEAVYBUILT) or*/ free ) {
 						player.bSetOnSpawn = true;
 					}
 					else {
-						CPrintToChat(client, "{red}[Mechanized Mercs] {white}King Tigers & Marder 2 Tank Destroyers are currently locked, Please Build a Heavy Support Garage to Unlock them.");
+						//CPrintToChat(client, "{red}[Mechanized Mercs] {white}King Tigers & Marder 2 Tank Destroyers are currently locked, Please Build a Heavy Support Garage to Unlock them.");
+						CPrintToChat(client, "{red}[Mechanized Mercs] {white}King Tigers & Marder 2 Tank Destroyers are currently locked.");
 						player.iType = -1;
 						player.bSetOnSpawn = false;
 					}
@@ -141,12 +145,14 @@ public Action ObjectBuilt(Event event, const char[] name, bool dontBroadcast)
 public Action RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
 	for( int team=0; team<2; ++team ) {
+		/*
 		for( int offset=0 ; offset<3 ; offset++ ) {
 			if( GarageRefs[team][offset] and IsValidEntity(EntRefToEntIndex(GarageRefs[team][offset])) )
 				CreateTimer( 0.1, RemoveEnt, GarageRefs[team][offset] );
 			GarageRefs[team][offset] = 0;
 			manager.DeleteGarage(team, OffsetToFlag(offset));
 		}
+		*/
 		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
 			if (TankConstruct[team][k][ENTREF]) {
 				CreateTimer( 0.1, RemoveEnt, TankConstruct[team][k][ENTREF] );

@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.6.6"
+#define PLUGIN_VERSION		"1.6.7"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -62,17 +62,17 @@ ConVar
 ;
 
 enum {
-	SupportBuildTime,
-	OffensiveBuildTime,
-	HeavySupportBuildTime,
-	OnEngieHitBuildTime,
+	//SupportBuildTime,
+	//OffensiveBuildTime,
+	//HeavySupportBuildTime,
+	//OnEngieHitBuildTime,
 	//OnOfficerHitBuildTime,
 	ArmoredCarGunDmg,
 	MaxSMGAmmo,
 	MaxRocketAmmo,
 	MaxGunnerAmmo,
 	RocketSpeed,
-	GarageMetalReq,
+	//GarageMetalReq,
 	AdvertTime,
 	ReplacePowerups,
 	VehicleConstructHP,
@@ -84,9 +84,9 @@ enum {
 	Marder3Metal,
 	LitePanzerMetal,
 	PanzerMetal,
-	SupportHP,
-	OffensiveHP,
-	HeavySupportHP,
+	//SupportHP,
+	//OffensiveHP,
+	//HeavySupportHP,
 	AmbulanceHP,
 	ArmoredCarHP,
 	KingPanzerHP,
@@ -181,12 +181,11 @@ GameModeManager manager;
 
 public void OnPluginStart()
 {
-	RegConsoleCmd("sm_garages",		SpawnVehicleGarageMenu);
-	RegConsoleCmd("sm_garage",		SpawnVehicleGarageMenu);
+	//RegConsoleCmd("sm_garages",		SpawnVehicleGarageMenu);
+	//RegConsoleCmd("sm_garage",		SpawnVehicleGarageMenu);
 	RegConsoleCmd("sm_bases",		SpawnVehicleGarageMenu);
 	RegConsoleCmd("sm_base",		SpawnVehicleGarageMenu);
 	RegConsoleCmd("sm_vehicle",		SpawnVehicleGarageMenu);
-	RegConsoleCmd("sm_build",		SpawnVehicleGarageMenu);
 
 	RegConsoleCmd("sm_mmclasshelp",		ClassInfoCmd);
 	RegConsoleCmd("sm_mmclassinfo",		ClassInfoCmd);
@@ -228,15 +227,16 @@ public void OnPluginStart()
 
 	AllowVehicleTele = CreateConVar("mechmercs_allowtele", "1", "(Dis)allow vehicles to be able to use Engineer teleporters", FCVAR_NONE, true, 0.0, true, 1.0);
 	
-	AllowFreeClasses = CreateConVar("mechmercs_allowfreevehicles", "0", "(Dis)allow vehicles to be used without requiring each team to build Garages", FCVAR_NONE, true, 0.0, true, 1.0);
+	//AllowFreeClasses = CreateConVar("mechmercs_allowfreevehicles", "0", "(Dis)allow vehicles to be used without requiring each team to build Garages", FCVAR_NONE, true, 0.0, true, 1.0);
+	AllowFreeClasses = CreateConVar("mechmercs_allowfreevehicles", "0", "(Dis)allow vehicles to be used without having to build Vehicles.", FCVAR_NONE, true, 0.0, true, 1.0);
 	
-	MMCvars[SupportBuildTime] = CreateConVar("mechmercs_support_buildtime", "60.0", "how long it takes in seconds for the Support Garage to build unsupported.", FCVAR_NONE, true, 1.0, true, 1200.0);
+	//MMCvars[SupportBuildTime] = CreateConVar("mechmercs_support_buildtime", "60.0", "how long it takes in seconds for the Support Garage to build unsupported.", FCVAR_NONE, true, 1.0, true, 1200.0);
 	
-	MMCvars[OffensiveBuildTime] = CreateConVar("mechmercs_offensive_buildtime", "120.0", "how long it takes in seconds for the Offensive Garage to build unsupported.", FCVAR_NONE, true, 1.0, true, 1200.0);
+	//MMCvars[OffensiveBuildTime] = CreateConVar("mechmercs_offensive_buildtime", "120.0", "how long it takes in seconds for the Offensive Garage to build unsupported.", FCVAR_NONE, true, 1.0, true, 1200.0);
 	
-	MMCvars[HeavySupportBuildTime] = CreateConVar("mechmercs_heavysupport_buildtime", "240.0", "how long it takes in seconds for the Heavy Support Garage to build unsupported.", FCVAR_NONE, true, 1.0, true, 1200.0);
+	//MMCvars[HeavySupportBuildTime] = CreateConVar("mechmercs_heavysupport_buildtime", "240.0", "how long it takes in seconds for the Heavy Support Garage to build unsupported.", FCVAR_NONE, true, 1.0, true, 1200.0);
 	
-	MMCvars[OnEngieHitBuildTime] = CreateConVar("mechmercs_engiehit_buildtime", "2.0", "when an engie wrench hits a Garage, how many seconds should it take off build time?", FCVAR_NONE, true, 1.0, true, 1200.0);
+	//MMCvars[OnEngieHitBuildTime] = CreateConVar("mechmercs_engiehit_buildtime", "2.0", "when an engie wrench hits a Garage, how many seconds should it take off build time?", FCVAR_NONE, true, 1.0, true, 1200.0);
 	
 	//MMCvars[OnOfficerHitBuildTime] = CreateConVar("mechmercs_officerhit_buildtime", "1.0", "when an officer melees a Garage, how many seconds should it take off build time?", FCVAR_NONE, true, 1.0, true, 1200.0);
 	
@@ -250,13 +250,14 @@ public void OnPluginStart()
 	
 	MMCvars[VehicleConstructHP] = CreateConVar("mechmercs_constructhp", "500", "how much max health vehicle constructs get", FCVAR_NONE, true, 1.0, true, 99999.0);
 	
-	MMCvars[BuildSetUpTime] = CreateConVar("mechmercs_allowbuild_setup", "0", "allows engineers to build Garages or constructs during setup time", FCVAR_NONE, true, 0.0, true, 1.0);
+	//MMCvars[BuildSetUpTime] = CreateConVar("mechmercs_allowbuild_setup", "0", "allows engineers to build Garages or constructs during setup time", FCVAR_NONE, true, 0.0, true, 1.0);
+	MMCvars[BuildSetUpTime] = CreateConVar("mechmercs_allowbuild_setup", "0", "allows engineers to build Vehicle constructs during setup time", FCVAR_NONE, true, 0.0, true, 1.0);
 	
-	MMCvars[SupportHP] = CreateConVar("mechmercs_supporthp", "1000", "how much max health the Support Garages get", FCVAR_NONE, true, 1.0, true, 99999.0);
+	//MMCvars[SupportHP] = CreateConVar("mechmercs_supporthp", "1000", "how much max health the Support Garages get", FCVAR_NONE, true, 1.0, true, 99999.0);
 	
-	MMCvars[OffensiveHP] = CreateConVar("mechmercs_offensivehp", "1500", "how much max health the Offensive Garages get", FCVAR_NONE, true, 1.0, true, 99999.0);
+	//MMCvars[OffensiveHP] = CreateConVar("mechmercs_offensivehp", "1500", "how much max health the Offensive Garages get", FCVAR_NONE, true, 1.0, true, 99999.0);
 	
-	MMCvars[HeavySupportHP] = CreateConVar("mechmercs_heavysupporthp", "2500", "how much max health the Heavy Support Garages get", FCVAR_NONE, true, 1.0, true, 99999.0);
+	//MMCvars[HeavySupportHP] = CreateConVar("mechmercs_heavysupporthp", "2500", "how much max health the Heavy Support Garages get", FCVAR_NONE, true, 1.0, true, 99999.0);
 	
 	MMCvars[AmbulanceHP] = CreateConVar("mechmercs_ambulancehp", "400", "how much max health the Ambulance vehicle gets", FCVAR_NONE, true, 1.0, true, 99999.0);
 	
@@ -283,7 +284,7 @@ public void OnPluginStart()
 	
 	MMCvars[AdvertTime] = CreateConVar("mechmercs_advert_time", "120.0", "how much time in seconds the advertisement will message.", FCVAR_NONE, true, 1.0, true, 999999.0);
 	
-	MMCvars[GarageMetalReq] = CreateConVar("mechmercs_garage_metal", "200", "how much is required to build a garage.", FCVAR_NONE, true, 0.0, true, 999999.0);
+	//MMCvars[GarageMetalReq] = CreateConVar("mechmercs_garage_metal", "200", "how much is required to build a garage.", FCVAR_NONE, true, 0.0, true, 999999.0);
 	
 	MMCvars[ReplacePowerups] = CreateConVar("mechmercs_replace_powerups", "1", "replaces mannpower powerups with ready-to-use tank constructs.", FCVAR_NONE, true, 0.0, true, 1.0);
 	
@@ -418,7 +419,7 @@ public void OnMapStart()
 {
 	ManageDownloads(); // in handler.sp
 	CreateTimer(0.1, Timer_VehicleThink, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(0.1, Timer_GarageThink, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	//CreateTimer(0.1, Timer_GarageThink, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(5.0, MakeModelTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(MMCvars[AdvertTime].FloatValue, Timer_Announce, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	
@@ -582,7 +583,8 @@ public Action GameInfoCmd(int client, int args)
 		return Plugin_Handled;
 
 	Panel panel = new Panel();
-	char helpstr[] = "Welcome to Mechanized Mercs, TF2's Combat Vehicles Mod!\n\nMechanized Mercs is a gameplay mod that adds combat vehicles to the game.\nThe Available Vehicles: the Armored Car, Ambulance, Panzer II, Panzer IV, Tiger II, and Marder 2 Tank Hunter\nEngineers can build Garages using !base to unlock the Vehicle classes. When Garages are built, any class can build vehicles.\nTo build vehicles, use !base near any of the garages, you must be near the garages to build vehicles.\nVehicles require building, hit with any melee them to build!";
+	//char helpstr[] = "Welcome to Mechanized Mercs, TF2's Combat Vehicles Mod!\n\nMechanized Mercs is a gameplay mod that adds combat vehicles to the game.\nThe Available Vehicles: the Armored Car, Ambulance, Panzer II, Panzer IV, Tiger II, and Marder 2 Tank Hunter\nEngineers can build Garages using !base to unlock the Vehicle classes. When Garages are built, any class can build vehicles.\nTo build vehicles, use !base near any of the garages, you must be near the garages to build vehicles.\nVehicles require building, hit with any melee them to build!";
+	char helpstr[] = "Mechanized Mercs: TF2's Combat Vehicles Mod.\n\nThe Available Vehicles: the Armored Car, Ambulance, Panzer II, Panzer IV, Tiger II, and Marder 2 Tank Hunter\nAny class can build vehicles.\nTo build vehicles, use !vehicle command.\nVehicles require building, hit with any melee them to build.\nEngies can build Vehicles faster than non-Engies.";
 	panel.SetTitle(helpstr);
 	panel.DrawItem( "Exit" );
 	panel.Send(client, HintPanel, 99);
@@ -597,39 +599,49 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 		return Plugin_Continue;
 
 	else if( IsClientObserver(client) or !IsPlayerAlive(client) ) {
-		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You Need to be Alive to become Vehicles, build Vehicles, or build Vehicle Garages.");
+		//CPrintToChat(client, "{red}[Mechanized Mercs] {white}You Need to be Alive to become Vehicles, build Vehicles, or build Vehicle Garages.");
+		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You Need to be Alive to become or build Vehicles.");
 		return Plugin_Handled;
 	}
 	else if( !MMCvars[BuildSetUpTime].BoolValue and (GameRules_GetRoundState() == RoundState_Preround or GameRules_GetProp("m_bInSetup")) ) {
-		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build Vehicles or Vehicle Garages yet...");
+		//CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build Vehicles or Vehicle Garages yet...");
+		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build Vehicles yet...");
 		return Plugin_Handled;
 	}
-	int team = GetClientTeam(client);
-	bool free = AllowFreeClasses.BoolValue;
+	else if( IsBlueBlocked(client) or IsRedBlocked(client) ) {
+		CPrintToChat(client, "{red}[Mechanized Mercs] {white}Your Team is blocked from making/using Vehicles!");
+		return Plugin_Handled;
+	}
+	//int team = GetClientTeam(client);
+	//bool free = AllowFreeClasses.BoolValue;
 	if( BaseFighter(client).Class == TFClass_Engineer ) {
 		Menu bases = new Menu( MenuHandler_BuildGarage );
 		
-		if( !(GarageFlags[team-2] & SUPPORTBUILT) and !free )
-			bases.AddItem("2", "Support Vehicle Garage: Unlocks the Scout Car and Ambulance vehicles");
-		else {
+		//if( !(GarageFlags[team-2] & SUPPORTBUILT) and !free )
+		//	bases.AddItem("2", "Support Vehicle Garage: Unlocks the Scout Car and Ambulance vehicles");
+		//else {
 			bases.AddItem("11", "Armored Car: Machinegun & 20mm Cannon");
 			bases.AddItem("12", "Ambulance: Self Defense Machinegun");
-		}
-		if( !(GarageFlags[team-2] & OFFENSIVEBUILT) and !free )
-			bases.AddItem("4", "Offensive Vehicle Garage: Unlocks the Panzer II and Panzer IV vehicles");
-		else {
+		//}
+		//if( !(GarageFlags[team-2] & OFFENSIVEBUILT) and !free )
+		//	bases.AddItem("4", "Offensive Vehicle Garage: Unlocks the Panzer II and Panzer IV vehicles");
+		//else {
 			bases.AddItem("13", "Panzer 2: Machinegun & Arcing, HE Rockets");
 			bases.AddItem("10", "Panzer 4: Machinegun & Rockets");
-		}
-		if( !(GarageFlags[team-2] & HEAVYBUILT) and !free )
-			bases.AddItem("8", "Heavy Support Vehicle Garage: Unlocks the King Panzer and Tank Destroyer vehicles");
-		else {
+		//}
+		//if( !(GarageFlags[team-2] & HEAVYBUILT) and !free )
+			//bases.AddItem("8", "Heavy Support Vehicle Garage: Unlocks the King Panzer and Tank Destroyer vehicles");
+		//else {
 			bases.AddItem("14", "Tiger 2 King Panzer: Machinegun, Rockets, Lotsa Health");
 			bases.AddItem("15", "Marder 2 AT: Armor Piercing Rockets");
-		}
+		//}
 		bases.Display(client, MENU_TIME_FOREVER);
 	}
 	else {
+		CPrintToChat(client, "{red}[Mechanized Mercs] {white}You need to be an Engineer to make Vehicles!");
+		return Plugin_Handled;
+	}
+	/*else {
 		Menu bases = new Menu( MenuHandler_BuildGarage );
 		if( (GarageFlags[team-2] & SUPPORTBUILT) or free ) {
 			bases.AddItem("11", "Armored Car: Machinegun & 20mm Cannon");
@@ -644,7 +656,7 @@ public Action SpawnVehicleGarageMenu (int client, int args)
 			bases.AddItem("15", "Marder 2 AT: Armor Piercing Rockets");
 		}
 		bases.Display(client, MENU_TIME_FOREVER);
-	}
+	}*/
 	return Plugin_Handled;
 }
 public int MenuHandler_GoTank(Menu menu, MenuAction action, int client, int select)
@@ -832,7 +844,7 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 			CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(victim) );
 			return Plugin_Continue;
 		}
-		
+
 		if( !strcmp(classname, "tf_weapon_wrench", false) or !strcmp(classname, "tf_weapon_robot_arm", false) ) {
 			int iCurrentMetal = GetEntProp(attacker, Prop_Data, "m_iAmmo", 4, 3);
 			int FixAdd = MMCvars[ConstructMetalAdd].IntValue;
@@ -840,14 +852,13 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 				if( iCurrentMetal < FixAdd )
 					FixAdd = iCurrentMetal;
 				
-				TankConstruct[team-2][index][METAL] += FixAdd;	// Takes 7 seconds with Jag to put in 200 metal
+				TankConstruct[team-2][index][METAL] += FixAdd*4;
 				SetEntProp(attacker, Prop_Data, "m_iAmmo", iCurrentMetal-FixAdd, 4, 3);
-				if( FixAdd > 0 )
-					EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
+				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			}
 			// if the engie has no metal, fall back to universal metal speed of half.
 			else if( iCurrentMetal == 0 and TankConstruct[team-2][index][METAL] < TankConstruct[team-2][index][MAXMETAL] ) {
-				TankConstruct[team-2][index][METAL] += FixAdd >> 1;
+				TankConstruct[team-2][index][METAL] += FixAdd;
 				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			}
 			else EmitSoundToClient(attacker, "weapons/wrench_hit_build_fail.wav");
@@ -855,11 +866,14 @@ public Action OnConstructTakeDamage(int victim, int& attacker, int& inflictor, f
 		else if( weapon == GetPlayerWeaponSlot(attacker, 2) and (damagetype & DMG_CLUB) ) {
 			int FixAdd = MMCvars[ConstructMetalAdd].IntValue;
 			if( TankConstruct[team-2][index][METAL] < TankConstruct[team-2][index][MAXMETAL] ) {
-				TankConstruct[team-2][index][METAL] += FixAdd >> 1;	// Takes 7 seconds with Jag to put in 200 metal
+				TankConstruct[team-2][index][METAL] += FixAdd;
 				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
 			}
 			else EmitSoundToClient(attacker, "weapons/wrench_hit_build_fail.wav");
 		}
+		if( TankConstruct[team-2][index][METAL] >= TankConstruct[team-2][index][MAXMETAL] )
+			SDKUnhook(victim, SDKHook_ShouldCollide, OnConstructCollide);
+		
 		return Plugin_Changed;
 	}
 	return Plugin_Continue;
@@ -885,7 +899,8 @@ public Action OnConstructTouch(int item, int other)
 
 		if( !BaseVehicle(other).bIsVehicle and TankConstruct[team-2][index][METAL] >= TankConstruct[team-2][index][MAXMETAL] ) {
 			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
-			ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle! JUMP to Exit Vehicle");
+			if( !(GetClientButtons(other) & IN_SCORE) )
+				ShowHudText(other, -1, "Press RELOAD to Enter the Vehicle! JUMP to Exit Vehicle");
 			if( GetClientButtons(other) & IN_RELOAD ) {
 				if( GetClientTeam(other)==team )
 					TankConstruct[team-2][index][PLYRHP] = GetClientHealth(other);
@@ -933,6 +948,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 	char info1[16]; menu.GetItem(select, info1, sizeof(info1));
 	int buildId = StringToInt(info1);
 	if( action == MenuAction_Select ) {
+		/*
 		if( buildId < 10 ) {
 			int metalreq = MMCvars[GarageMetalReq].IntValue;
 			if( GetEntProp(client, Prop_Data, "m_iAmmo", 4, 3) < metalreq ) {	// 200
@@ -953,12 +969,12 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 			float flEyePos[3], flAng[3];
 			GetClientEyePosition(client, flEyePos);
 			GetClientEyeAngles(client, flAng);
-			/*
-			TR_TraceRayFilter( flEyePos, flAng, MASK_PLAYERSOLID, RayType_Infinite, TraceFilterIgnorePlayers, client );
 
-			if( TR_GetFraction() < 1.0 ) {
-				float flEndPos[3]; TR_GetEndPosition(flEndPos);
-			*/
+			//TR_TraceRayFilter( flEyePos, flAng, MASK_PLAYERSOLID, RayType_Infinite, TraceFilterIgnorePlayers, client );
+
+			//if( TR_GetFraction() < 1.0 ) {
+			//	float flEndPos[3]; TR_GetEndPosition(flEndPos);
+
 			GetClientAbsAngles(client, flAng); //flAng[1] += 90.0;
 
 			int pStruct = CreateEntityByName("prop_dynamic_override");
@@ -1103,7 +1119,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 				SpawnVehicleGarageMenu(client, -1);
 			}
 		}
-		else {
+		else*/ {
 			if( manager.IsPowerupFull(GetClientTeam(client)) ) {
 				CPrintToChat(client, "{red}[Mechanized Mercs] {white}Your team has too many built vehicles!");
 				return;
@@ -1114,7 +1130,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 			}
 			int construct = CreateEntityByName("prop_dynamic_override");
 			if( construct <= 0 or !IsValidEdict(construct) )
-				return ;
+				return;
 			
 			int vehicletype = buildId - 10;
 			int team = GetClientTeam(client);
@@ -1127,43 +1143,43 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 			GetClientEyeAngles(client, flAng);
 			
 			int metal;
-			int garage;
+			//int garage;
 			switch( vehicletype ) {
 				case Tank: {
 					szModelPath = TankModel;
 					Format(tName, sizeof(tName), "mechmercs_construct_panzer4%i", GetRandomInt(0, 9999999));
 					metal = MMCvars[PanzerMetal].IntValue;
-					garage = manager.GetGarage(team-2, OFFENSEGARAGE);
+					//garage = manager.GetGarage(team-2, OFFENSEGARAGE);
 				}
 				case ArmoredCar: {
 					szModelPath = ArmCarModel;
 					Format(tName, sizeof(tName), "mechmercs_construct_armoredcar%i", GetRandomInt(0, 9999999));
 					metal = MMCvars[ArmoredCarMetal].IntValue;
-					garage = manager.GetGarage(team-2, SUPPORTGARAGE);
+					//garage = manager.GetGarage(team-2, SUPPORTGARAGE);
 				}
 				case Ambulance: {
 					szModelPath = AmbModel;
 					Format(tName, sizeof(tName), "mechmercs_construct_ambulance%i", GetRandomInt(0, 9999999));
 					metal = MMCvars[AmbulanceMetal].IntValue;
-					garage = manager.GetGarage(team-2, SUPPORTGARAGE);
+					//garage = manager.GetGarage(team-2, SUPPORTGARAGE);
 				}
 				case PanzerIII: {
 					szModelPath = LightTankModel;
 					Format(tName, sizeof(tName), "mechmercs_construct_lighttank%i", GetRandomInt(0, 9999999));
 					metal = MMCvars[LitePanzerMetal].IntValue;
-					garage = manager.GetGarage(team-2, OFFENSEGARAGE);
+					//garage = manager.GetGarage(team-2, OFFENSEGARAGE);
 				}
 				case KingPanzer: {
 					szModelPath = KingTankModel;
 					Format(tName, sizeof(tName), "mechmercs_construct_tiger%i", GetRandomInt(0, 9999999));
 					metal = MMCvars[KingPanzerMetal].IntValue;
-					garage = manager.GetGarage(team-2, HEAVYGARAGE);
+					//garage = manager.GetGarage(team-2, HEAVYGARAGE);
 				}
 				case Destroyer: {
 					szModelPath = DestroyerModel;
 					Format(tName, sizeof(tName), "mechmercs_construct_marder%i", GetRandomInt(0, 9999999));
 					metal = MMCvars[Marder3Metal].IntValue;
-					garage = manager.GetGarage(team-2, HEAVYGARAGE);
+					//garage = manager.GetGarage(team-2, HEAVYGARAGE);
 				}
 			}
 			
@@ -1183,8 +1199,9 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 			if( IsPlacementPosValid(client, mins, maxs, flEndPos) ) {
 				//float flEndPos[3]; TR_GetEndPosition(flEndPos);
 				{
-					float spawnPos[3], garagePos[3];
-					int iEnt = -1;
+					//float spawnPos[3], garagePos[3];
+					//int iEnt = -1;
+					/*
 					while( (iEnt = FindEntityByClassname(iEnt, "info_player_teamspawn")) != -1 ) {
 						if( GetEntProp(iEnt, Prop_Send, "m_iTeamNum") != team )
 							continue;
@@ -1197,13 +1214,14 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 							return;
 						}
 					}
+					*/
 					if( TR_PointOutsideWorld(flEndPos) ) {
 						CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can't build a Vehicle outside the Playable Area!");
 						SpawnVehicleGarageMenu(client, -1);
 						CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
 						return;
 					}
-					if( garage != 0 ) {
+					/*if( garage != 0 ) {
 						garagePos = Vec_GetEntPropVector(garage, Prop_Send, "m_vecOrigin");
 						if( GetVectorDistance(flEndPos, garagePos) > 400.0 ) {
 							CPrintToChat(client, "{red}[Mechanized Mercs] {white}You can only build a vehicle near its appropriate garage!");
@@ -1211,7 +1229,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 							CreateTimer( 0.1, RemoveEnt, EntIndexToEntRef(construct) );
 							return;
 						}
-					}
+					}*/
 				}
 				DispatchSpawn(construct);
 				SetEntProp( construct, Prop_Send, "m_nSolidType", 6 );
@@ -1229,6 +1247,7 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 				SetEntProp(construct, Prop_Data, "m_takedamage", 2, 1);
 				SDKHook(construct, SDKHook_OnTakeDamage,	OnConstructTakeDamage);
 				SDKHook(construct, SDKHook_Touch,		OnConstructTouch);
+				SDKHook(construct, SDKHook_ShouldCollide, OnConstructCollide);
 		
 				SetEntProp(construct, Prop_Data, "m_iHealth", MMCvars[VehicleConstructHP].IntValue);
 				if( IsValidEntity(construct) and IsValidEdict(construct) ) {
@@ -1270,19 +1289,19 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 #define CONTENTS_REDTEAM			0x800
 #define CONTENTS_BLUTEAM			0x1000
 #define COLLISION_GROUP_PLAYER_MOVEMENT		8
-
+/*
 public bool OnGarageCollide(int entity, int collisiongroup, int contentsmask, bool originalResult)
 {
 	if( entity and IsValidEntity(entity) ) {
 		int ent_team = GetEntProp( entity, Prop_Send, "m_iTeamNum" );
 		for( int i=MaxClients ; i ; i-- )
-			if( IsValidClient(i) )
-				PrintToConsole(i, "collide ent == %i", entity);
+			//if( IsValidClient(i) )
+			//	PrintToConsole(i, "collide ent == %i", entity);
 		
-		if( collisiongroup == COLLISION_GROUP_PLAYER_MOVEMENT
-			and (entity == manager.GetGarage(ent_team-2, SUPPORTGARAGE)
-			or entity == manager.GetGarage(ent_team-2, OFFENSEGARAGE)
-			or entity == manager.GetGarage(ent_team-2, HEAVYGARAGE)) ) {
+		if( collisiongroup == COLLISION_GROUP_PLAYER_MOVEMENT ) {
+			//and (entity == manager.GetGarage(ent_team-2, SUPPORTGARAGE)
+			//or entity == manager.GetGarage(ent_team-2, OFFENSEGARAGE)
+			//or entity == manager.GetGarage(ent_team-2, HEAVYGARAGE)) ) {
 			switch( ent_team ) {	// Do collisions by team
 				case 2: {
 					if( !(contentsmask & CONTENTS_REDTEAM) )
@@ -1298,6 +1317,33 @@ public bool OnGarageCollide(int entity, int collisiongroup, int contentsmask, bo
 	}
 	return true;
 }
+*/
+
+public bool OnConstructCollide(int entity, int collisiongroup, int contentsmask, bool originalResult)
+{
+	if( entity and IsValidEntity(entity) ) {
+		int ent_team = GetEntProp( entity, Prop_Send, "m_iTeamNum" );
+		for( int i=MaxClients ; i ; i-- )
+			//if( IsValidClient(i) )
+			//	PrintToConsole(i, "collide ent == %i", entity);
+		
+		if( collisiongroup == COLLISION_GROUP_PLAYER_MOVEMENT ) {
+			switch( ent_team ) {	// Do collisions by team
+				case 2: {
+					if( !(contentsmask & CONTENTS_REDTEAM) )
+						return false;
+				}
+				case 3: {
+					if( !(contentsmask & CONTENTS_BLUTEAM) )
+						return false;
+				}
+			}
+			return true;
+		}
+	}
+	return true;
+}
+
 public Action OnEffectTransmit(int entity, int client)
 {
 	if (!IsClientValid(client))
@@ -1344,24 +1390,6 @@ public void OnPreThink(int client)
 {
 	if( IsClientObserver(client) )
 		return;
-	
-	int entity = GetClientAimTarget(client, false);
-	if (entity > MaxClients) {
-		int index = manager.FindEntityPowerUpIndex(2, entity);
-		int team ;
-		if (index == -1) {
-			index = manager.FindEntityPowerUpIndex(3, entity);
-			if (index == -1)
-				return;
-			else team = 3;
-		}
-		else team = 2;
-
-		SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
-		if (TankConstruct[team-2][index][METAL] < TankConstruct[team-2][index][MAXMETAL])
-			ShowHudText(client, -1, "Metal Progress for Vehicle: %i / %i\nVehicle Health: %i", TankConstruct[team-2][index][METAL], TankConstruct[team-2][index][MAXMETAL], GetEntProp(entity, Prop_Data, "m_iHealth"));
-		else ShowHudText(client, -1, "Vehicle is Ready to Board!");
-	}
 
 	BaseVehicle player = BaseVehicle(client);
 	if( player.bIsVehicle ) {
@@ -1415,6 +1443,7 @@ public void OnPreThink(int client)
 	}
 	else {
 		// self isn't taken yet!
+		
 		BaseVehicle vehicle;
 		for( int i=MaxClients ; i ; --i ) {
 			if( !IsClientValid(i) )
@@ -1431,17 +1460,37 @@ public void OnPreThink(int client)
 			if( (vehicle.iType==Tank or vehicle.iType==ArmoredCar or vehicle.iType==PanzerIII or vehicle.iType==KingPanzer)
 			and IsInRange(client, vehicle.index, 100.0) ) {
 				SetHudTextParams(0.93, 0.80, 0.1, 0, 255, 255, 255);
-				if( !player.bIsGunner ) {
+				if( !player.bIsGunner and !vehicle.bHasGunner ) {
 					ShowSyncHudText(client, hHudText, "press RELOAD to become a mounted gunner!");
 					if( GetClientButtons(client) & IN_RELOAD )
 						vehicle.SetUpGunner(player);
 				}
-				else ShowSyncHudText(client, hHudText, "press JUMP to get off.");
+				else ShowSyncHudText(client, hHudText, "Current Vehicle Health: %i\npress JUMP to get off.", vehicle.iHealth);
+			}
+		}
+		
+		int entity = GetClientAimTarget(client, false);
+		if (entity > MaxClients) {
+			int index = manager.FindEntityPowerUpIndex(2, entity);
+			int team;
+			if (index == -1) {
+				index = manager.FindEntityPowerUpIndex(3, entity);
+				if (index == -1)
+					return;
+				else team = 3;
+			}
+			else team = 2;
+			
+			SetHudTextParams(0.93, -1.0, 0.1, 0, 255, 0, 255);
+			if( !(GetClientButtons(client) & IN_SCORE) ) {
+				if (TankConstruct[team-2][index][METAL] < TankConstruct[team-2][index][MAXMETAL])
+					ShowHudText(client, -1, "Metal Progress for Vehicle: %i / %i\nVehicle Health: %i", TankConstruct[team-2][index][METAL], TankConstruct[team-2][index][MAXMETAL], GetEntProp(entity, Prop_Data, "m_iHealth"));
+				else ShowHudText(client, -1, "Vehicle is Ready to Board!");
 			}
 		}
 	}
 }
-public Action TraceAttack(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& ammotype, int hitbox, int hitgroup)
+public Action TraceAttack(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup)
 {
 	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
@@ -1449,10 +1498,8 @@ public Action TraceAttack(int victim, int& attacker, int& inflictor, float& dama
 	if( IsClientValid(attacker) and IsClientValid(victim) ) {
 		/* this is basically the same code from my Advanced armor plugin but with the difference of making it work for the vehicle classes */
 		if( GetClientTeam(attacker) == GetClientTeam(victim) ) {
-			if( TF2_GetPlayerClass(attacker) == TFClass_Engineer
-				and HealthFromEngies.BoolValue
-				and BaseVehicle(victim).bIsVehicle ) {
-				//BaseVehicle fixer	= BaseVehicle(attacker);
+			if( TF2_GetPlayerClass(attacker) == TFClass_Engineer and HealthFromEngies.BoolValue and BaseVehicle(victim).bIsVehicle ) {
+				//BaseVehicle fixer		= BaseVehicle(attacker);
 				//BaseVehicle player	= BaseVehicle(victim);
 				ManageVehicleEngieHit( BaseVehicle(victim), BaseVehicle(attacker) ); // in handler.sp
 			}
@@ -1460,7 +1507,7 @@ public Action TraceAttack(int victim, int& attacker, int& inflictor, float& dama
 	}
 	return Plugin_Continue;
 }
-public Action OnTakeDamage(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
@@ -1484,7 +1531,9 @@ public Action OnTakeDamage(int victim, int& attacker, int& inflictor, float& dam
 
 	return Plugin_Continue;
 }
-public Action OnGarageTakeDamage(int victim, int& attacker, int& inflictor, float &damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+
+/*
+public Action OnGarageTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if( !IsValidClient(attacker) )
 		return Plugin_Continue;
@@ -1546,31 +1595,11 @@ public Action OnGarageTakeDamage(int victim, int& attacker, int& inflictor, floa
 				//EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav", _, SNDCHAN_AUTO, _, _, _, 80);
 			}
 		}
-		/*		DIDN'T WORK
-		else if (TF2_GetPlayerClass(attacker) == TFClass_Engineer and !strcmp(classname, "tf_weapon_shotgun_building_rescue", false))
-		{
-			int health = GetEntProp(victim, Prop_Data, "m_iHealth");
-			if ( (GarageFlags[team-2] & flag) and health and health < maxhp) {
-				health += 100;
-				if (health > maxhp)
-					health = maxhp;
-
-				SetEntProp(victim, Prop_Data, "m_iHealth", health);
-				EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav");
-			}
-		}
-		
-		else if (TF2_GetPlayerClass(attacker) == TFClass_Spy and weapon == GetPlayerWeaponSlot(attacker, 2)) {
-			if (GarageBuildTime[team-2][offset] > 0.0) {
-				GarageBuildTime[team-2][offset] -= MMCvars[OnOfficerHitBuildTime].FloatValue;
-				EmitSoundToClient(attacker, ( !GetRandomInt(0,1) ) ? "weapons/wrench_hit_build_success1.wav" : "weapons/wrench_hit_build_success2.wav" );
-				//EmitSoundToClient(attacker, "ui/item_store_add_to_cart.wav", _, SNDCHAN_AUTO, _, _, _, 80);
-			}
-		}*/
 		return Plugin_Changed;
 	}
 	return Plugin_Continue;
 }
+*/
 
 public Action RemoveEnt(Handle timer, any entid)
 {
@@ -1582,12 +1611,16 @@ public Action RemoveEnt(Handle timer, any entid)
 /*
 	When using intended garage models, have going inside the garages heal and rearm the respective vehicle.
 */
+/*
 public Action Timer_GarageThink(Handle timer)
 {
 	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
-	int garage, /*owner,*/ health[2][3], buildinghp[3];
+	int garage, //owner,
+		health[2][3],
+		buildinghp[3]
+	;
 	for( int team=0 ; team<2 ; ++team ) {
 		for( int offset=0 ; offset<3 ; ++offset ) {
 			garage = manager.GetGarage(team, offset);
@@ -1610,24 +1643,22 @@ public Action Timer_GarageThink(Handle timer)
 			}
 
 			// If the owner engineer disconnects OR changes team, kill the garage
-			/*
-			owner = GetOwner(garage);
-			if( owner <= 0 ) {
-				CreateTimer( 0.1, RemoveEnt, GarageGlowRefs[team][offset] );
-				GarageGlowRefs[team][offset] = 0;
-
-				CreateTimer( 0.1, RemoveEnt, GarageRefs[team][offset] );
-				GarageRefs[team][offset] = 0;
-				manager.DeleteGarage(team, OffsetToFlag(offset));
-				continue;
-			}
-			else if( GetClientTeam(owner) != GetEntProp(garage, Prop_Data, "m_iTeamNum") ) {
-				CreateTimer( 0.1, RemoveEnt, GarageRefs[team][offset] );
-				GarageRefs[team][offset] = 0;
-				manager.DeleteGarage(team, OffsetToFlag(offset));
-				continue;
-			}
-			*/
+			//owner = GetOwner(garage);
+			//if( owner <= 0 ) {
+			//	CreateTimer( 0.1, RemoveEnt, GarageGlowRefs[team][offset] );
+			//	GarageGlowRefs[team][offset] = 0;
+			
+			//	CreateTimer( 0.1, RemoveEnt, GarageRefs[team][offset] );
+			//	GarageRefs[team][offset] = 0;
+			//	manager.DeleteGarage(team, OffsetToFlag(offset));
+			//	continue;
+			//}
+			//else if( GetClientTeam(owner) != GetEntProp(garage, Prop_Data, "m_iTeamNum") ) {
+			//	CreateTimer( 0.1, RemoveEnt, GarageRefs[team][offset] );
+			//	GarageRefs[team][offset] = 0;
+			//	manager.DeleteGarage(team, OffsetToFlag(offset));
+			//	continue;
+			//}
 			health[team][offset] = GetEntProp(garage, Prop_Data, "m_iHealth");
 			
 			if( GarageBuildTime[team][offset] <= 0.0 ) {
@@ -1750,6 +1781,7 @@ public Action Timer_GarageThink(Handle timer)
 	}
 	return Plugin_Continue;
 }
+*/
 public Action OnPowUpTouch(int item, int player)
 {
 	if (0 < player <= MaxClients) {
@@ -2111,7 +2143,7 @@ stock float Vec2DLength(float v[2])
 	for (int i=0 ; i<2 ; ++i)
 		length += v[i]*v[i];
 	
-	length = SquareRoot (length);
+	length = SquareRoot(length);
 	return length;
 }
 
