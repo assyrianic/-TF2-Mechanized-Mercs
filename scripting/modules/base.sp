@@ -426,6 +426,9 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		
 		// We're gonna regenerate our ex-gunner but without resetting health.
 		int gunner = this.hGunner.index;
+		if( gunner < 0 || gunner > MaxClients || !IsClientInGame(gunner) )
+			return;
+		
 		SetEntPropFloat(gunner, Prop_Send, "m_flModelScale", 1.0);
 		
 		//SetVariantString("!activator");
@@ -449,6 +452,8 @@ methodmap BaseVehicle < BaseFighter	/* the methodmap for all vehicles to use. Us
 		
 		float playerVel[3]; playerVel[0] = playerVel[1] = playerVel[2] = 0.0;
 		TeleportEntity(gunner, NULL_VECTOR, NULL_VECTOR, playerVel);
+		float plyrOrigin[3]; GetClientAbsOrigin(gunner, plyrOrigin);
+		BringClientToSide(gunner, plyrOrigin);
 	}
 	public void UpdateGunner()
 	{

@@ -18,7 +18,7 @@
 #pragma semicolon		1
 #pragma newdecls		required
 
-#define PLUGIN_VERSION		"1.6.5"
+#define PLUGIN_VERSION		"1.6.6"
 #define CODEFRAMETIME		(1.0/30.0)	/* 30 frames per second means 0.03333 seconds pass each frame */
 
 #define IsClientValid(%1)	( (%1) && (%1) <= MaxClients && IsClientInGame((%1)) )
@@ -66,12 +66,13 @@ enum {
 	OffensiveBuildTime,
 	HeavySupportBuildTime,
 	OnEngieHitBuildTime,
-	OnOfficerHitBuildTime,
+	//OnOfficerHitBuildTime,
 	ArmoredCarGunDmg,
 	MaxSMGAmmo,
 	MaxRocketAmmo,
 	MaxGunnerAmmo,
 	RocketSpeed,
+	GarageMetalReq,
 	AdvertTime,
 	ReplacePowerups,
 	VehicleConstructHP,
@@ -237,7 +238,7 @@ public void OnPluginStart()
 	
 	MMCvars[OnEngieHitBuildTime] = CreateConVar("mechmercs_engiehit_buildtime", "2.0", "when an engie wrench hits a Garage, how many seconds should it take off build time?", FCVAR_NONE, true, 1.0, true, 1200.0);
 	
-	MMCvars[OnOfficerHitBuildTime] = CreateConVar("mechmercs_officerhit_buildtime", "1.0", "when an officer melees a Garage, how many seconds should it take off build time?", FCVAR_NONE, true, 1.0, true, 1200.0);
+	//MMCvars[OnOfficerHitBuildTime] = CreateConVar("mechmercs_officerhit_buildtime", "1.0", "when an officer melees a Garage, how many seconds should it take off build time?", FCVAR_NONE, true, 1.0, true, 1200.0);
 	
 	MMCvars[ArmoredCarGunDmg] = CreateConVar("mechmercs_armoredcar_cannondmg", "40.0", "how much damage the Armored Car's 20mm cannon deals.", FCVAR_NONE, true, 0.0, true, 99999.0);
 	
@@ -281,6 +282,8 @@ public void OnPluginStart()
 	MMCvars[RocketSpeed] = CreateConVar("mechmercs_tankrocket_speed", "4000.0", "how fast the mouse2 rockets travel.", FCVAR_NONE, true, 1.0, true, 999999.0);
 	
 	MMCvars[AdvertTime] = CreateConVar("mechmercs_advert_time", "120.0", "how much time in seconds the advertisement will message.", FCVAR_NONE, true, 1.0, true, 999999.0);
+	
+	MMCvars[GarageMetalReq] = CreateConVar("mechmercs_garage_metal", "200", "how much is required to build a garage.", FCVAR_NONE, true, 0.0, true, 999999.0);
 	
 	MMCvars[ReplacePowerups] = CreateConVar("mechmercs_replace_powerups", "1", "replaces mannpower powerups with ready-to-use tank constructs.", FCVAR_NONE, true, 0.0, true, 1.0);
 	
@@ -440,9 +443,7 @@ public Action Timer_Announce(Handle timer)
 	if( !bEnabled.BoolValue )
 		return Plugin_Continue;
 
-	CPrintToChatAll("{red}[Mechanized Mercs] {default}For Gameplay Help and Information, type '{green}!mmhelp{default}' or '{green}!mminfo{default}'; for Class help, type '{green}!mmclasshelp{default}' or '{green}!mmclassinfo{default}'.");
-	
-	CPrintToChatAll("{red}[Mechanized Mercs]{default} created by {green}Nergal the Ashurian{default} AKA {green}Assyrian{default} or {green}Nergal{default}. Join the Mechanized Mercs Steam Group @ {green}'http://steamcommunity.com/groups/mechmercs'{default}.");
+	CPrintToChatAll("{red}[Mechanized Mercs] {default}By {green}Nergal the Ashurian{default} AKA {green}Assyrian{default}. For Gameplay Help/Info, use '{green}!mmhelp{default}' or '{green}!mminfo{default}'");
 	return Plugin_Continue;
 }
 
@@ -933,8 +934,9 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 	int buildId = StringToInt(info1);
 	if( action == MenuAction_Select ) {
 		if( buildId < 10 ) {
-			if( GetEntProp(client, Prop_Data, "m_iAmmo", 4, 3) < 200 ) {
-				CPrintToChat(client, "{red}[Mechanized Mercs] {white}You need 200 Metal to build a Garage.");
+			int metalreq = MMCvars[GarageMetalReq].IntValue;
+			if( GetEntProp(client, Prop_Data, "m_iAmmo", 4, 3) < metalreq ) {	// 200
+				CPrintToChat(client, "{red}[Mechanized Mercs] {white}You need %i Metal to build a Garage.", metalreq);
 				SpawnVehicleGarageMenu(client, -1);
 				return;
 			}
@@ -1091,7 +1093,8 @@ public int MenuHandler_BuildGarage(Menu menu, MenuAction action, int client, int
 							case HEAVYBUILT:	CPrintToChat(i, "{red}[Mechanized Mercs] {white}Heavy Support Garage Built, Will activate in 4 Minutes");
 						}
 					}
-					SetEntProp(client, Prop_Data, "m_iAmmo", 0, 4, 3);
+					int currMetal = GetEntProp(client, Prop_Data, "m_iAmmo", 4, 3);
+					SetEntProp(client, Prop_Data, "m_iAmmo", currMetal-metalreq, 4, 3);
 				}
 			}
 			else {
@@ -1366,7 +1369,7 @@ public void OnPreThink(int client)
 		if( (GetClientButtons(client) & IN_JUMP) and (GetEntityFlags(client) & FL_ONGROUND) ) {
 			// record vehicle info so we can recreate our vehicle construct as ready to use
 			float vec_origin[3]; GetClientAbsOrigin(client, vec_origin);
-			//vec_origin[2] += 10.0;
+			vec_origin[2] += 3.0;
 			if( BringClientToSide(client, vec_origin) ) {	// found safe place for player to be
 				if( player.bHasGunner )
 					player.RemoveGunner();

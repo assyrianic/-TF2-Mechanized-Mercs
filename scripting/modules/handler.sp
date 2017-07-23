@@ -615,7 +615,7 @@ public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
 	return Plugin_Continue;
 }
 
-public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDefinitionIndex, Handle& hItem)
+public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDefinitionIndex, Handle &hItem)
 {
 	if( !bEnabled.BoolValue )
 		return Plugin_Continue;

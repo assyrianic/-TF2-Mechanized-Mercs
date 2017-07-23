@@ -59,6 +59,7 @@ public Action Resupply(Event event, const char[] name, bool dontBroadcast)
 				}
 			}
 			player.bIsVehicle = player.bSetOnSpawn;
+			player.Reset();
 			if( player.bIsVehicle )
 				player.ConvertToVehicle();
 		}
