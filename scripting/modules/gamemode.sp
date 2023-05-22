@@ -148,12 +148,13 @@ methodmap GameModeManager {
 		if( entity < 0 )
 			return -1;
 		
-		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
-			if (!TankConstruct[team-2][k][ENTREF])
+		for( int k; k < MAX_CONSTRUCT_VEHICLES; k++ ) {
+			int construct = TankConstruct[team-2][k][ENTREF];
+			if( !construct )
 				continue;
-			else if (TankConstruct[team-2][k][ENTREF] and !IsValidEntity(EntRefToEntIndex(TankConstruct[team-2][k][ENTREF])))
+			else if( construct && !IsValidEntity(EntRefToEntIndex(construct)) )
 				TankConstruct[team-2][k][ENTREF] = 0;
-			else if (EntRefToEntIndex(TankConstruct[team-2][k][ENTREF]) == entity)
+			else if( EntRefToEntIndex(construct)==entity )
 				return k;
 		}
 		return -1;
@@ -161,7 +162,7 @@ methodmap GameModeManager {
 	
 	public int SpawnTankConstruct(int builder, float vecOrigin[3], int team, int vehtype, bool ask) {
 		int construct = CreateEntityByName("prop_dynamic_override");
-		if ( construct <= 0 or !IsValidEdict(construct) )
+		if( construct <= 0 or !IsValidEdict(construct) )
 			return -1;
 		
 		char tName[32]; tName[0] = '\0';
