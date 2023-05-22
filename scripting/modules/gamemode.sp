@@ -1,11 +1,11 @@
 
 #define SUPPORTBUILT		2	// wtf is the point of bit shifting when I can just directly put the number?
 #define OFFENSIVEBUILT		4
-#define HEAVYBUILT			8
+#define HEAVYBUILT		8
 
 #define SUPPORTGARAGE		0
 #define OFFENSEGARAGE		1
-#define HEAVYGARAGE			2
+#define HEAVYGARAGE		2
 
 #if defined _steamtools_included
 bool steamtools;
@@ -18,8 +18,8 @@ bool
 /*
 int
 	GarageFlags[2],
-	GarageRefs[2][3],	// index 0-2 stores support, offensive, and heavy garages
-	GarageGlowRefs[2][3]	// I should've made GarageRefs like this but I'm too lazy to modify. EDIT: did it :3
+	GarageRefs[2][3],	/// index 0-2 stores support, offensive, and heavy garages
+	GarageGlowRefs[2][3]	/// I should've made GarageRefs like this but I'm too lazy to modify. EDIT: did it :3
 ;
 */
 /*
@@ -41,7 +41,7 @@ float
 #define GASLEFT		9
 
 int TankConstruct[2][MAX_CONSTRUCT_VEHICLES][10];
-/* 0-red ; 1-blue */
+/** 0-red ; 1-blue */
 
 methodmap GameModeManager {
 	public GameModeManager() {}
@@ -119,8 +119,8 @@ methodmap GameModeManager {
 		return false;
 	}
 	*/
-	public bool IsPowerupFull(const int team)
-	{
+	
+	public bool IsPowerupFull(int team) {
 		int count=0;
 		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
 			if (!TankConstruct[team-2][k][ENTREF])
@@ -133,17 +133,18 @@ methodmap GameModeManager {
 		}
 		return (count == MAX_CONSTRUCT_VEHICLES);
 	}
-	public int GetNextEmptyPowerUpSlot(const int team)
-	{
-		for (int k=0 ; k < MAX_CONSTRUCT_VEHICLES ; ++k) {
-			if (TankConstruct[team-2][k][ENTREF])
+	
+	public int GetNextEmptyPowerUpSlot(int team) {
+		for( int k=0; k < MAX_CONSTRUCT_VEHICLES; k++ ) {
+			if( TankConstruct[team-2][k][ENTREF] != 0 ) {
 				continue;
+			}
 			return k;
 		}
 		return -1;
 	}
-	public int FindEntityPowerUpIndex(const int team, const int entity)
-	{
+	
+	public int FindEntityPowerUpIndex(int team, int entity) {
 		if( entity < 0 )
 			return -1;
 		
@@ -157,8 +158,8 @@ methodmap GameModeManager {
 		}
 		return -1;
 	}
-	public int SpawnTankConstruct(const int builder, float vecOrigin[3], const int team, const int vehtype, bool ask)
-	{
+	
+	public int SpawnTankConstruct(int builder, float vecOrigin[3], int team, int vehtype, bool ask) {
 		int construct = CreateEntityByName("prop_dynamic_override");
 		if ( construct <= 0 or !IsValidEdict(construct) )
 			return -1;
@@ -247,8 +248,8 @@ methodmap GameModeManager {
 		}
 		return -1;
 	}
-	public int SpawnTankPowerup(float vecOrigin[3], const int vehtype)
-	{
+	
+	public int SpawnTankPowerup(float vecOrigin[3], int vehtype) {
 		int PowUp = CreateEntityByName("prop_dynamic_override");
 		if ( PowUp <= 0 or !IsValidEdict(PowUp) )
 			return -1;
@@ -313,16 +314,9 @@ methodmap GameModeManager {
 	}
 };
 
-stock int OffsetToFlag(const int x)
-{
-	int flag=0;
-	switch (x) {
-		case 0:	flag = SUPPORTBUILT;	// 2
-		case 1:	flag = OFFENSIVEBUILT;	// 4
-		case 2:	flag = HEAVYBUILT;	// 8
-	} return flag;
+stock int OffsetToFlag(int x) {
+	return 2 << x;
 }
-stock int FlagtoOffset(const int x)
-{
-	return (x >> 2);
+stock int FlagtoOffset(int x) {
+	return x >>> 2;
 }
